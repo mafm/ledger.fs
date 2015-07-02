@@ -41,6 +41,16 @@ run (restOfLine true) "ABC\n"
 // run pSymbol " foo bar baz"
 
 
+parseTransactionFile "2122-22-01 foo\n foo 10AUD\n bar 11\nbaz 12\n2012-12-22 foo  sss\nacc $10\n"
+
+run pTransaction "2122-22-01 foo\n foo 10AUD\n bar 11\nbaz 12\n2012-12-22"
+run pPosting "foo -$12\n"
+run pPostings "foo -$12\nbar 10\n"
+
+
+let foo () = 
+     { Posting.account = "456";
+       Posting.amount = AUD 10}
 
 
 

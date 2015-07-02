@@ -11,10 +11,10 @@ type ConfigParse =
 let nonEolWhiteSpace = " \t"
 // At least one space
 let pMandatorySpace =
-    (skipMany1 (anyOf nonEolWhiteSpace)) <?> "space character (' ')"
+    (skipMany1 (anyOf nonEolWhiteSpace)) <?> "space"
 // Optional space
 let pOptionalSpace =
-    (skipMany (anyOf nonEolWhiteSpace)) <?> "optional space"
+    (skipMany (anyOf nonEolWhiteSpace)) <?> "space"
 
 let pAccount =
        let isAccountFirstChar c = isLetter c
@@ -22,7 +22,7 @@ let pAccount =
        many1Satisfy2L isAccountFirstChar isAccountChar "account"
 
 let pAudAmount =
-    let isAudAmountFirstChar c = isDigit c || c = '-' || c = '$'
+    let isAudAmountFirstChar c = isDigit c || c = '-' || c = '$' || c = '+'
     let isAudAmountChar c = isDigit c || c = '-' || c = '$' || c = '.' || c = ','
     (many1Satisfy2L isAudAmountFirstChar isAudAmountChar "amount")  .>> (opt ((pOptionalSpace) .>> (pstring "AUD")))
     |>> fun s ->
@@ -59,8 +59,26 @@ let pVerifyBalance =
         (fun date account amount -> BalanceVerfication { BalanceVerfication.date = date
                                                          BalanceVerfication.account = account
                                                          BalanceVerfication.amount = amount})
+let pPosting =
+    pipe2 (pOptionalSpace >>. pAccount)
+          (pMandatorySpace >>. pAmount .>> pOptionalSpace .>> newline)         
+        (fun account amount -> { Posting.account = account;
+                                 Posting.amount = amount})
+
+let pPostings =
+    (many1 pPosting)
+
+let pTransaction =
+    pipe3 pDate
+          (pMandatorySpace >>. (restOfLine false) .>> newline)         
+          pPostings
+        (fun date description postings ->
+           Transaction { Transaction.date = date;
+                         Transaction.description = description;
+                         Transaction.postings = postings})
+    
 let pItem =
-    pOptionalSpace >>. (pCommentLine <|> pBlankLine <|> pVerifyBalance)
+    pOptionalSpace >>. (pCommentLine <|> pBlankLine <|> pVerifyBalance <|> pTransaction)
 
 let pItems =
     (many pItem)
