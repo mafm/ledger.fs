@@ -5,7 +5,7 @@
 // This began life as a rewrite of python code, so any static typing here is better than that.
 
 type Date = string
-type Comment = string
+type Description = string
 type Account = string
 
 type Amount =
@@ -16,7 +16,7 @@ type Posting = { account: Account
                  amount:  Amount}               
 
 type Transaction = { date:    Date
-                     comment: Comment
+                     description: Description
                      postings: Posting list}                     
 
 type BalanceVerfication = { date:    Date
@@ -26,4 +26,7 @@ type BalanceVerfication = { date:    Date
 type Item =
     | Transaction of Transaction
     | BalanceVerfication of BalanceVerfication
+    | BlankLine
+    | Comment of string
                                  
+type TransactionFile = Item list
