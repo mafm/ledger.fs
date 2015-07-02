@@ -7,5 +7,5 @@ which was inspired by John Wiegley's
 
 If you want an overview, most of what I wrote about
 [ledger.py](https://github.com/mafm/ledger.py/) applies here too -
-this is just a rewrite because I need to make some additions and it's
+this is just a rewrite because I need to make some additions, and it's
 a lot easier working in F# than python.
