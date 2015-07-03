@@ -74,8 +74,6 @@ type ``Test Parsing of transaction text data`` () =
                                                  BalanceVerfication {date = "2013-02-01";
                                                                      account = "Assets:Bankwest:Cheque";
                                                                      amount = AUD 62105;}]) in do
-            ((printfn "parsed: %A" ) parse)
-            ((printfn "expected: %A" ) expected)
             parse |> should equal expected
 
 
