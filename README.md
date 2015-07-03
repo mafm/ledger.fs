@@ -70,8 +70,9 @@ The program is currently a visual studio solution. You'll need something from mi
 # Grab the code
 git clone git://github.com/mafm/ledger.fs
 cd ledger.fs
+```
 <whatever you need to do to build this .... it should be straightforward ....>
-
+```
 # Generate some example reports
 Ledger.fs examples/sample.transactions --print-balances
 Ledger.fs examples/sample.transactions --print-register Expenses
@@ -93,9 +94,10 @@ port the old ones over from python.
 
 ## Status
 
-I am using this program on a regular basis to do real work. I believe that what _has_ been implemented is more
-or less correct. However, this program hasn't been extensively tested,
-so use it at your own risk.
+I will soone be using this program on a regular basis to do real work. I have been using
+[ledger.py](https://github.com/mafm/ledger.py/) for real work on a regular basis. I believe
+that what _has_ been implemented is more or less correct. However, this program hasn't
+been extensively tested, so use it at your own risk.
 
 Lots of useful easy-to-implement features have not yet been
 implemented. I am currently (July 2015) attempting to get this working, and plan to add:
@@ -111,7 +113,7 @@ Ledger.fs is an FSharp rewrite of
 [Ledger](http://www.ledger-cli.org/)
 
 I wanted to add some functionality to ledger.py and FSharp is a lot easier
-to deal with long-term than python. 
+to deal with long-term than python.
 
 Ledger.py is also similar to some older double-entry accounting
 software I wrote using wxPython in 2004. Although that program had a
