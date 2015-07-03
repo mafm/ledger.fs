@@ -1,4 +1,4 @@
-# Ledger.fs: command-line, double-entry accounting in F#
+# Ledger.fs: command-line, double-entry accounting in F\#
 
 **Ledger.fs** is a simple, command-line, double-entry accounting
 system. It reads transactions written in a simple format from a text
@@ -8,7 +8,7 @@ Because transaction data is stored as text, it can be managed
 using a version control system like git. This makes it easy
 to maintain an audit trail.
 
-Ledger.py is like John Wiegley's
+Ledger.fs is like John Wiegley's
 [Ledger](http://www.ledger-cli.org/), but [simpler](https://github.com/mafm/ledger.py/blob/master/doc/Ledger.md).
 
 ## What it does
@@ -36,7 +36,7 @@ VERIFY-BALANCE 2013-02-01 Assets:Bankwest:Cheque 621.05
 ```
 and produces reports like this:
 ```
-$Ledger examples/sample.transactions --print-balances
+$Ledger.fs examples/sample.transactions --print-balances
    $621.05 Assets:Bankwest:Cheque
  $1,000.00 Equity:OpeningBalances
    $436.96 Expenses
@@ -59,7 +59,7 @@ $Ledger examples/sample.transactions --print-balances --first-date 2013-01-05 --
 ```
 or this:
 ```
-$Ledger examples/sample.transactions --print-register Expenses
+$Ledger.fs examples/sample.transactions --print-register Expenses
 2013-01-05	 $98.53	 $98.53	Expenses:Food:Groceries	I bought some groceries and paid using the cheque account.
 2013-01-10	$156.54	 $58.01	Expenses:Motor:Fuel    	I bought some petrol, and paid using a credit card.
 2013-01-15	$436.96	$280.42	Expenses:Electricity   	I paid my electricity bill.
