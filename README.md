@@ -71,7 +71,7 @@ The program is currently a visual studio solution. You'll need something from mi
 git clone git://github.com/mafm/ledger.fs
 cd ledger.fs
 ```
-<whatever you need to do to build this .... it should be straightforward ....>
+(Whatever you need to do to build this .... it should be straightforward ....)
 ```
 # Generate some example reports
 Ledger.fs examples/sample.transactions --print-balances
