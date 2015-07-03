@@ -1,4 +1,4 @@
-# Ledger.fs: command-line, double-entry accounting in F\#
+# Ledger.fs: command-line, double-entry accounting in FSharp
 
 **Ledger.fs** is a simple, command-line, double-entry accounting
 system. It reads transactions written in a simple format from a text
@@ -106,11 +106,11 @@ asap.
 
 ## Origins
 
-Ledger.fs is an F# rewrite of
+Ledger.fs is an FSharp rewrite of
 [ledger.py](https://github.com/mafm/ledger.py/) which was inspired by John Wiegley's
 [Ledger](http://www.ledger-cli.org/)
 
-I wanted to add some functionality to ledger.py and F# is a lot easier
+I wanted to add some functionality to ledger.py and FSharp is a lot easier
 to deal with long-term than python. 
 
 Ledger.py is also similar to some older double-entry accounting
