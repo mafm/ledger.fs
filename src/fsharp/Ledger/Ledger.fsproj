@@ -8,7 +8,7 @@
     <ProjectGuid>dedc2890-f983-4c9b-8753-bf7b902ca044</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Ledger</RootNamespace>
-    <AssemblyName>Ledger</AssemblyName>
+    <AssemblyName>Ledger.fs</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
