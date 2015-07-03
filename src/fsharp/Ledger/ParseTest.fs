@@ -24,24 +24,24 @@ type ``Test Parsing of transaction text data`` () =
                                                                            amount = AUD 1000;}];}]))
     [<Test>]
     member test.``Example from readme.md.`` () =
-        let parse = (parseTransactionFile """2013-01-01 I began the year with $1000 in my cheque account.
+        let parse = (parseTransactionFile ("""2013-01-01 I began the year with $1000 in my cheque account.
                                                Assets:Bankwest:Cheque      $1,000
                                                Equity:OpeningBalances      $1,000
 
-                                             2013-01-05 I bought some groceries and paid using the cheque account.
+                                              2013-01-05 I bought some groceries and paid using the cheque account.
                                                Expenses:Food:Groceries    $98.53
                                                Assets:Bankwest:Cheque    -$98.53
 
-                                             2013-01-10 I bought some petrol, and paid using a credit card.
+                                              2013-01-10 I bought some petrol, and paid using a credit card.
                                                Expenses:Motor:Fuel    $58.01
                                                Liabilities:Bankwest:Visa   $58.01
 
-                                             2013-01-15 I paid my electricity bill.
-                                              Expenses:Electricity    $280.42
-                                              Assets:Bankwest:Cheque  -$280.42
+                                              2013-01-15 I paid my electricity bill.
+                                                Expenses:Electricity    $280.42
+                                                Assets:Bankwest:Cheque  -$280.42
 
-                                             # I checked my bank statement on the 1st of Feb, and this is what it said.
-                                             VERIFY-BALANCE 2013-02-01 Assets:Bankwest:Cheque 621.05""")
+                                              # I checked my bank statement on the 1st of Feb, and this is what it said.
+                                              VERIFY-BALANCE 2013-02-01 Assets:Bankwest:Cheque 621.05""" + "\n"))
         let expected = (ParseSuccess [Transaction {date = "2013-01-01";
                                                               description = "I began the year with $1000 in my cheque account.";
                                                               postings = [{account = "Assets:Bankwest:Cheque";

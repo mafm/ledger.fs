@@ -27,7 +27,7 @@ let pAudAmount =
     (many1Satisfy2L isAudAmountFirstChar isAudAmountChar "amount")  .>> (opt ((pOptionalSpace) .>> (pstring "AUD")))
     |>> fun s ->
             let s = (stripChars "$," s) in
-            AUD (int (0.5 + 100.0 * (float s)))
+            AUD (int (round (100.0 * (float s))))
 
 let pAmount =
     pAudAmount
@@ -55,7 +55,7 @@ let pCommentLine =
 let pVerifyBalance =
     pipe3 ((pstring "VERIFY-BALANCE") >>. pMandatorySpace >>. pDate)
           (pMandatorySpace >>. pAccount)
-          (pMandatorySpace >>. pAmount)
+          (pMandatorySpace >>. pAmount .>> pOptionalSpace .>> newline)
         (fun date account amount -> BalanceVerfication { BalanceVerfication.date = date
                                                          BalanceVerfication.account = account
                                                          BalanceVerfication.amount = amount})
@@ -66,7 +66,7 @@ let pPosting =
                                  Posting.amount = amount})
 
 let pPostings =
-    (many1 pPosting)
+    (many1 (attempt pPosting))
 
 let pTransaction =
     pipe3 pDate
