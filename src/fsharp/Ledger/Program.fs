@@ -21,7 +21,40 @@
 /// This is a F# rewrite of almost the same thing in python:
 ///   https://github.com/mafm/ledger.py
 
+open Parse
+open Calculations
+
+exception UnableToParseFile of filename: string * message: string
+
+let parseTransactionFile filename =
+    let parseResult = Parse.readTransactionFile filename
+    match parseResult with
+        | ParseSuccess items -> items
+        | ParseError message -> raise (UnableToParseFile(filename, message))
+
+let fatal message =
+    printfn "Fatal error: %s" message
+    // XXX/TODO: Should generally not delay, unless we know this was started outside
+    //           of a shell window - which should not usually be the case.
+    printfn "Pausing for 60s to allow you to read this message."
+    System.Threading.Thread.Sleep(60 * 1000)
+    System.Environment.Exit 1
+
 [<EntryPoint>]
-let main argv = 
+let main argv =
+    try
+        let input = parseTransactionFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
+        match checkDateOrder (transactions input) with
+            | OK -> ()
+            | Problem(prev_date, prev_description, next_date, next_description) ->
+                fatal (sprintf "Transactions not in date order.\n\
+                                Transaction dated %s\n\
+                                \t%s\n\
+                                after transaction dated %s\n\
+                                \t%s"
+                               next_date next_description prev_date prev_description)
+    with
+    | UnableToParseFile(f,m) ->
+        fatal (sprintf "Error in parsing input file: '%s'\n%s" f m)
     printfn "%A" argv
     0 // return an integer exit code

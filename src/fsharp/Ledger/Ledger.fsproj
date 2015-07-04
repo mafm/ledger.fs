@@ -58,6 +58,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Parse.fs" />
     <Compile Include="ParseTest.fs" />
+    <Compile Include="Calculations.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
