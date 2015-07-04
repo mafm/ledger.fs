@@ -24,7 +24,7 @@ let pAccount =
 let pAudAmount =
     let isAudAmountFirstChar c = isDigit c || c = '-' || c = '$' || c = '+'
     let isAudAmountChar c = isDigit c || c = '-' || c = '$' || c = '.' || c = ','
-    (many1Satisfy2L isAudAmountFirstChar isAudAmountChar "amount")  .>> (opt ((pOptionalSpace) .>> (pstring "AUD")))
+    (many1Satisfy2L isAudAmountFirstChar isAudAmountChar "amount")  .>> pOptionalSpace .>> (opt (pstring "AUD"))
     |>> fun s ->
             let s = (stripChars "$," s) in
             AUD (int (round (100.0 * (float s))))
@@ -61,7 +61,7 @@ let pVerifyBalance =
                                                          BalanceVerfication.amount = amount})
 let pPosting =
     pipe2 (pOptionalSpace >>. pAccount)
-          (pMandatorySpace >>. pAmount .>> pOptionalSpace .>> newline)         
+          (pMandatorySpace >>. pAmount .>> pOptionalSpace .>> newline)
         (fun account amount -> { Posting.account = account;
                                  Posting.amount = amount})
 
@@ -70,13 +70,13 @@ let pPostings =
 
 let pTransaction =
     pipe3 pDate
-          (pMandatorySpace >>. (restOfLine false) .>> newline)         
+          (pMandatorySpace >>. (restOfLine false) .>> newline)
           pPostings
         (fun date description postings ->
            Transaction { Transaction.date = date;
                          Transaction.description = description;
                          Transaction.postings = postings})
-    
+
 let pItem =
     pOptionalSpace >>. (pCommentLine <|> pBlankLine <|> pVerifyBalance <|> pTransaction)
 
@@ -92,3 +92,6 @@ let parseTransactionFile str =
     match run pTransactionFile str with
         | Success(result, _, _) -> ParseSuccess(result)
         | Failure(errorMessage, _, _) -> ParseError(errorMessage)
+
+let readTransactionFile filename =
+    (parseTransactionFile (System.IO.File.ReadAllText filename))
