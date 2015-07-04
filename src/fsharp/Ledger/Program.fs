@@ -46,13 +46,13 @@ let main argv =
         let input = parseTransactionFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
         match checkDateOrder (transactions input) with
             | OK -> ()
-            | Problem(prev_date, prev_description, next_date, next_description) ->
+            | Problem(prev, next) ->
                 fatal (sprintf "Transactions not in date order.\n\
                                 Transaction dated %s\n\
                                 \t%s\n\
                                 after transaction dated %s\n\
                                 \t%s"
-                               next_date next_description prev_date prev_description)
+                               next.date next.description prev.date prev.description)
     with
     | UnableToParseFile(f,m) ->
         fatal (sprintf "Error in parsing input file: '%s'\n%s" f m)

@@ -26,21 +26,28 @@ let balanceVerifications items =
 
 type DateOrderCheck =
     | OK 
-    | Problem of Date * Description * Date * Description
+    | Problem of previous: Transaction * next: Transaction
 
+/// Check transactions are in date order. Give two problem transactions if not.
 let checkDateOrder (transactions : Transaction list) =
     let rec helper (previous : Transaction) (transactions : Transaction list) =
         match transactions with 
             | [] -> DateOrderCheck.OK
             | (t :: tail) -> 
                 if t.date < previous.date then
-                    DateOrderCheck.Problem(previous.date, previous.description,
-                                            t.date, t.description)
+                    DateOrderCheck.Problem(previous, t)
                 else
                     (helper t tail)                                                
     match transactions with
         | [] -> DateOrderCheck.OK
         | (t :: tail) -> (helper t tail)            
-    
-            
-    
+
+/// Filter transactions by optional (inclusive) dates.
+let filter (transactions : Transaction list) (first : Date option) (last : Date option) =
+    let transactions = match first with
+                        | None -> transactions
+                        | Some date -> List.filter (fun t -> t.date >= date) transactions
+    let transactions = match last with
+                        | None -> transactions
+                        | Some date -> List.filter (fun t -> t.date <= date) transactions
+    transactions
