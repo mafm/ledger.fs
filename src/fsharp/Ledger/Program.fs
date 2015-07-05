@@ -26,8 +26,8 @@ open Calculations
 
 exception UnableToParseFile of filename: string * message: string
 
-let parseTransactionFile filename =
-    let parseResult = Parse.readTransactionFile filename
+let parseInputFile filename =
+    let parseResult = Parse.readInputFile filename
     match parseResult with
         | ParseSuccess items -> items
         | ParseError message -> raise (UnableToParseFile(filename, message))
@@ -43,7 +43,7 @@ let fatal message =
 [<EntryPoint>]
 let main argv =
     try
-        let input = parseTransactionFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
+        let input = parseInputFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
         match checkDateOrder (transactions input) with
             | OK -> ()
             | Problem(prev, next) ->

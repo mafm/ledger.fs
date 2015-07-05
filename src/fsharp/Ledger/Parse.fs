@@ -1,7 +1,7 @@
 ﻿module Parse
 
 open FParsec
-open Types
+open InputTypes
 open Misc
 
 type ConfigParse =
@@ -88,10 +88,10 @@ let pTransactionFile =
     pItems .>> eof
 
 // Top-level parsing routine(s).
-let parseTransactionFile str =
+let parseInputString str =
     match run pTransactionFile str with
         | Success(result, _, _) -> ParseSuccess(result)
         | Failure(errorMessage, _, _) -> ParseError(errorMessage)
 
-let readTransactionFile filename =
-    (parseTransactionFile (System.IO.File.ReadAllText filename))
+let readInputFile filename =
+    (parseInputString (System.IO.File.ReadAllText filename))

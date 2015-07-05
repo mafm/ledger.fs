@@ -1,18 +1,21 @@
-﻿module Types
+﻿module InputTypes
 
 // Will start this quick and dirty, and upgrade types as practically required.
 //
 // This began life as a rewrite of python code, so any static typing here is better than that.
 
+exception BadAccountName of name: string * problem: string
+
 type Date = string
 type Description = string
-type Account = string
+
+type AccountName = string 
 
 type Amount =
     /// AUD amounts are stored as cents, and converted to dollars on input/output. 
     | AUD of int
 
-type Posting = { account: Account
+type Posting = { account: AccountName
                  amount:  Amount}               
 
 type Transaction = { date:    Date
@@ -20,7 +23,7 @@ type Transaction = { date:    Date
                      postings: Posting list}                     
 
 type BalanceVerfication = { date:    Date
-                            account: Account
+                            account: AccountName
                             amount: Amount}
 
 type Item =
@@ -30,3 +33,4 @@ type Item =
     | Comment of string
                                  
 type TransactionFile = Item list
+

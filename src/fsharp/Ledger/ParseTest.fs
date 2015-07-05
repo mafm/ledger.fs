@@ -3,13 +3,13 @@
 open NUnit.Framework
 open FsUnit
 open Parse
-open Types
+open InputTypes
 
 [<TestFixture>]
 type ``Test Parsing of transaction text data`` () =
     [<Test>]
     member test.``parseTransactionData.`` () =
-        let parse = (parseTransactionFile "2122-22-01 foo\n foo 10AUD\n bar 11\n baz 12\n2012-12-22 foo  sss\nacc $10\n") in do
+        let parse = (parseInputString "2122-22-01 foo\n foo 10AUD\n bar 11\n baz 12\n2012-12-22 foo  sss\nacc $10\n") in do
             parse |> should equal (ParseSuccess ([Transaction {date = "2122-22-01";
                                                               description = "foo";
                                                               postings = [{account = "foo";
@@ -24,7 +24,7 @@ type ``Test Parsing of transaction text data`` () =
                                                                            amount = AUD 1000;}];}]))
     [<Test>]
     member test.``Example from readme.md.`` () =
-        let parse = (parseTransactionFile ("""2013-01-01 I began the year with $1000 in my cheque account.
+        let parse = (parseInputString ("""2013-01-01 I began the year with $1000 in my cheque account.
                                                Assets:Bankwest:Cheque      $1,000
                                                Equity:OpeningBalances      $1,000
 
