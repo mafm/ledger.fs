@@ -96,6 +96,9 @@ type Account = struct
       ///
       /// For example, an Account with fullName "Expenses:BankFees:AccountServiceFee",
       /// will have name "AccountServiceFee".
+      ///
+      /// XXX: The name field is redundant - we can easily get it from fullName.
+      ///      Is it actually useful?
       val name: string
       // How do balances in this account count against balances in other accounts?
       val sign: int
@@ -122,14 +125,30 @@ type Account = struct
                     | [] -> raise (BadAccountName(fullName, "Empty name"))
         let sign = sign (accountType fullName)
         new Account(fullName, name, sign,
-                    PersistentDictionary<string, Account>.Empty,
-                    PersistentQueue<Posting>.Empty,
+                    PersistentDictionary.Empty,
+                    PersistentQueue.Empty,
                     AUD 0)
-      member this.Book (p: Posting) =
+      /// Add posting to this.postings,
+      /// add posting.amount to this.balance, and
+      /// book posting to relevant sub-account.
+      member this.Book (p: Posting, (subAccountDetails: AccountNameDetail list)) =
         new Account(this.fullName,
                     this.name,
                     this.sign,
-                    this.subAccounts,
+                    (match subAccountDetails with
+                            | [] -> this.subAccounts
+                            | subAccountName::subSubAccountDetails ->
+                                    let subAccount = if this.subAccounts.ContainsKey(subAccountName.canonical) then
+                                                        this.subAccounts.[subAccountName.canonical]
+                                                     else
+                                                        new Account(this.fullName + ":" + subAccountName.input,
+                                                                    subAccountName.input,
+                                                                    this.sign,
+                                                                    PersistentDictionary.Empty,
+                                                                    PersistentQueue.Empty,
+                                                                    AUD 0)
+                                    let subAccount = subAccount.Book(p, subSubAccountDetails)
+                                    this.subAccounts.Add(subAccountName.canonical, subAccount)),
                     this.postings.Enqueue(p),
                     (addAmounts this.balance p.amount))
     end
