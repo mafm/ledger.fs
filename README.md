@@ -11,6 +11,12 @@ to maintain an audit trail.
 Ledger.fs is like John Wiegley's
 [Ledger](http://www.ledger-cli.org/), but [simpler](https://github.com/mafm/ledger.py/blob/master/doc/Ledger.md).
 
+This code is basically a rewrite of an earlier python equivalent -
+[ledger.py](https://github.com/mafm/ledger.py/). The python code was
+not particularly complex, but the FSharp code is dramatically easier
+to understand and extend because of the help from the type system. It
+also runs an order of magnitude more quickly.
+
 ## What it does
 
 Ledger.fs reads an input file that's written in a simple file like this:
@@ -100,11 +106,14 @@ that what _has_ been implemented is more or less correct. However, this program 
 been extensively tested, so use it at your own risk.
 
 Lots of useful easy-to-implement features have not yet been
-implemented. I am currently (July 2015) attempting to get this working, and plan to add:
+implemented. I am currently (July 2015) attempting to get this working, and plan to add asap:
+- Excel-formatted reports - the python version did this
 - multi-currency support
 - multi-entity support
-- Excel-formatted reports
-asap.
+
+The complexity of the code in python was past the point where I was
+really happy adding the multi-currency/multi-entity features in
+python. Working in FSharp is dramatically more pleasant.
 
 ## Origins
 
