@@ -53,6 +53,10 @@ let main argv =
                                 after transaction dated %s\n\
                                 \t%s"
                                next.date next.description prev.date prev.description)
+    /// XXX: To validate input file we need to (at least) check:
+    ///      - transactions are in date order
+    ///      - transactions balance
+    ///      - all account names in transactions are valid.
     with
     | UnableToParseFile(f,m) ->
         fatal (sprintf "Error in parsing input file: '%s'\n%s" f m)
