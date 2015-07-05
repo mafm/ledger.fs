@@ -13,7 +13,7 @@ type AccountType =
 /// An increase/decrease to an account type with +ve sign is
 /// balanced by an increase/decrease to an account with -ve sign.
 let sign (accountType: AccountType) =
-    match accountType with 
+    match accountType with
     | Asset -> 1
     | Liability -> -1
     | Income -> -1
@@ -26,7 +26,7 @@ let accountType (name : AccountName) =
     let root = match components with
                     | root::tail -> root
                     | _ -> raise (BadAccountName(name, "Empty name"))
-    match root with 
+    match root with
     | "ASSET"       -> Asset
     | "ASSETS"      -> Asset
     | "LIABILITY"   -> Liability
@@ -48,6 +48,30 @@ let canonicalRootName name =
     | Expense -> "EXPENSE"
     | Equity -> "EQUITY"
 
+/// Add two amounts
+let addAmounts (a: Amount) (b: Amount) =
+   match a with
+    | AUD a -> match b with
+                | AUD b -> AUD (a+b)
+
+type AccountNameDetail = {
+    canonical: string;
+    input: string}
+
+/// Break AccountName into ordered list of components.
+/// For each level of the account, we canonical & input components.
+/// Checkout out unit test for an example of what this does.
+let splitAccountName (name: AccountName) =
+        let components = name.Split(':') |> Array.toList
+        let rec helper (components: string list) =
+            match components with
+            | [] -> []
+            | first::rest -> {canonical = first.ToUpper(); input = first} :: (helper rest)
+        match components with
+            | root::rest -> {canonical = (canonicalRootName name); input = root} :: (helper rest)
+            | [] -> raise (BadAccountName(name, "Empty name"))
+
+
 /// An account contains:
 /// - a balance
 /// - sub-accounts
@@ -66,7 +90,7 @@ type Account = struct
       /// and "EXPENSES:BANKFEES" will get mapped to a single account.
       ///
       /// When generating reports, we aim to use the first spelling of
-      /// the name seen in the input file.            
+      /// the name seen in the input file.
       val fullName: string
       /// The short (sub-account) name of this account as presented to user.
       ///
@@ -94,18 +118,22 @@ type Account = struct
                                        balance = balance}
       new (fullName: string) =
         let name = match (fullName.ToUpper().Split(':') |> Array.toList |> List.rev) with
-                | name :: _ -> name
-                | [] -> raise (BadAccountName(fullName, "Empty name"))
+                    | name :: _ -> name
+                    | [] -> raise (BadAccountName(fullName, "Empty name"))
         let sign = sign (accountType fullName)
         new Account(fullName, name, sign,
                     PersistentDictionary<string, Account>.Empty,
                     PersistentQueue<Posting>.Empty,
                     AUD 0)
-      member this.Foo() =
-            match this.balance with
-                AUD x -> x+10
+      member this.Book (p: Posting) =
+        new Account(this.fullName,
+                    this.name,
+                    this.sign,
+                    this.subAccounts,
+                    this.postings.Enqueue(p),
+                    (addAmounts this.balance p.amount))
     end
-        
+
 /// A set of accounts - ie
 /// - a tree structured set of accounts and their sub-accounts
 /// each node contains:
@@ -114,5 +142,4 @@ type Account = struct
 /// - the account's balance
 /// (In the python code, this was called account-tree or something like that.)
 type Accounts () =
-    let value = PersistentDictionary<string, Account>.Empty                    
-
+    let value = PersistentDictionary<string, Account>.Empty
