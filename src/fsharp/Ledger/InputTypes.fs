@@ -26,11 +26,11 @@ type BalanceVerfication = { date:    Date
                             account: AccountName
                             amount: Amount}
 
-type Item =
+type Input =
     | Transaction of Transaction
     | BalanceVerfication of BalanceVerfication
     | BlankLine
     | Comment of string
                                  
-type TransactionFile = Item list
+type InputFile = Input list
 

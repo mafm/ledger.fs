@@ -6,7 +6,7 @@ open Misc
 
 type ConfigParse =
     | ParseError of string
-    | ParseSuccess of TransactionFile
+    | ParseSuccess of InputFile
 
 let nonEolWhiteSpace = " \t"
 // At least one space
@@ -77,19 +77,19 @@ let pTransaction =
                          Transaction.description = description;
                          Transaction.postings = postings})
 
-let pItem =
+let pInput =
     pOptionalSpace >>. (pCommentLine <|> pBlankLine <|> pVerifyBalance <|> pTransaction)
 
-let pItems =
-    (many pItem)
+let pInputs =
+    (many pInput)
 
 // Stuff we need to parse a transaction file
-let pTransactionFile =
-    pItems .>> eof
+let pInputFile =
+    pInputs .>> eof
 
 // Top-level parsing routine(s).
 let parseInputString str =
-    match run pTransactionFile str with
+    match run pInputFile str with
         | Success(result, _, _) -> ParseSuccess(result)
         | Failure(errorMessage, _, _) -> ParseError(errorMessage)
 
