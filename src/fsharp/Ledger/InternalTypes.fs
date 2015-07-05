@@ -42,7 +42,7 @@ let accountType (name : AccountName) =
 let canonicalRootName name =
     let accountType = accountType name
     match accountType with
-    | Asset -> "ASSET"
+    | Asset -> "ASSETS"
     | Liability -> "LIABILITY"
     | Income -> "INCOME"
     | Expense -> "EXPENSE"
@@ -159,6 +159,30 @@ type Account = struct
 /// - the preferred spelling of the account's name
 /// - the set of postings affecting the account, and
 /// - the account's balance
-/// (In the python code, this was called account-tree or something like that.)
-type Accounts () =
-    let value = PersistentDictionary<string, Account>.Empty
+///
+/// In the python code, this was called account-tree or something like that.
+///
+/// Perhaps when we create an empty Accounts object, it should
+/// contain a top-level account for each of the five basic account types.
+/// On the other hand, if a set of transactions is missing some of the basic
+/// account types, we can put them into a structure that doesn't have those
+/// root accounts. When we generate reports, we should get enough type help
+/// that the report code doesn't assume they are there when they're not.
+
+type Accounts private (accounts: PersistentDictionary<string, Account>) =
+    let accounts = accounts
+    // I want to be able to create a no-argument constructor, but that's not possible.
+    // Instead, have a constructor that takes no arguments, and hope nobdy private constructor that takes a set of accounts, and a static
+    // "create" method with no arguments.
+    new () = Accounts(PersistentDictionary.Empty)
+    member this.Accounts = accounts
+    member this.Book (p: Posting) =
+        let accountDetails = (splitAccountName p.account)
+        match accountDetails with
+            | []  -> raise (BadAccountName(p.account, "Empty name"))
+            | accountName::subAccountDetails ->
+                            let account = if accounts.ContainsKey(accountName.canonical) then
+                                            accounts.[accountName.canonical]
+                                          else
+                                            new Account(accountName.input)
+                            new Accounts(accounts.Add(accountName.canonical, account.Book(p, subAccountDetails)))
