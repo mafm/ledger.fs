@@ -54,7 +54,7 @@ let addAmounts (a: Amount) (b: Amount) =
     | AUD a -> match b with
                 | AUD b -> AUD (a+b)
 
-type AccountNameDetail = {
+type AccountNameComponent = {
     canonical: string;
     input: string}
 
@@ -131,7 +131,7 @@ type Account = struct
       /// Add posting to this.postings,
       /// add posting.amount to this.balance, and
       /// book posting to relevant sub-account.
-      member this.Book (p: Posting, (subAccountDetails: AccountNameDetail list)) =
+      member this.Book (p: Posting, (subAccountDetails: AccountNameComponent list)) =
         new Account(this.fullName,
                     this.name,
                     this.sign,
@@ -151,6 +151,14 @@ type Account = struct
                                     this.subAccounts.Add(subAccountName.canonical, subAccount)),
                     this.postings.Enqueue(p),
                     (addAmounts this.balance p.amount))
+      member this.find (accountDetails: AccountNameComponent list) : Account option =
+        match accountDetails with
+            | []  -> Some this
+            | subAccountName::subSubAccountDetails ->
+                if this.subAccounts.ContainsKey(subAccountName.canonical) then
+                    (this.subAccounts.[subAccountName.canonical].find subSubAccountDetails)
+                else
+                    None
     end
 
 /// A set of accounts - ie
@@ -192,3 +200,13 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
         (List.fold (fun (accounts : Accounts) (p: Posting) -> (accounts.Book p))
                    this
                    t.postings)
+    // Given an account name, find the account
+    member this.find (account: AccountName) =
+        let accountDetails = (splitAccountName account)
+        match accountDetails with
+            | []  -> raise (BadAccountName(account, "Empty name"))
+            | accountName::subAccountDetails ->
+                if accounts.ContainsKey(accountName.canonical) then
+                    (accounts.[accountName.canonical].find subAccountDetails)
+                else
+                    None
