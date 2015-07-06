@@ -176,6 +176,7 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
     // "create" method with no arguments.
     new () = Accounts(PersistentDictionary.Empty)
     member this.Accounts = accounts
+    /// Book postings to relevant account.
     member this.Book (p: Posting) =
         let accountDetails = (splitAccountName p.account)
         match accountDetails with
@@ -186,3 +187,8 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
                                           else
                                             new Account(accountName.input)
                             new Accounts(accounts.Add(accountName.canonical, account.Book(p, subAccountDetails)))
+    /// Book all postings in transaction.
+    member this.Book (t: Transaction) =
+        (List.fold (fun (accounts : Accounts) (p: Posting) -> (accounts.Book p))
+                   this
+                   t.postings)

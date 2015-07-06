@@ -48,3 +48,21 @@ type ``Test Internal Types`` () =
         a2.Accounts.["ASSETS"].postings |> should equal (PersistentQueue.Empty.Enqueue p)
         a2.Accounts.["ASSETS"].subAccounts.["BANKWEST"].postings |> should equal (PersistentQueue.Empty.Enqueue p)
         a2.Accounts.["ASSETS"].subAccounts.["BANKWEST"].subAccounts.["CHEQUE"].postings |> should equal (PersistentQueue.Empty.Enqueue p)
+    [<Test>]
+    member test.``Book transaction to Accounts.``() =
+        // Maybe this is also right first time.
+        let t = {Transaction.date = "2013-01-01";
+             description = "I began the year with $1000 in my cheque account.";
+             // NB: Top-level account "Asset" gets created as "ASSET_S_"
+             postings = [{account = "Asset:Bankwest:Cheque";
+                          amount = AUD 100000;};
+                         {account = "Equity:OpeningBalances";
+                          amount = AUD 100000;}];}
+        let a = Accounts()
+        let a2 = a.Book(t)
+        a2.Accounts.ContainsKey("ASSETS") |> should be True
+        a2.Accounts.ContainsKey("EQUITY") |> should be True
+        a2.Accounts.["ASSETS"].balance |> should equal (AUD 100000)
+        a2.Accounts.["EQUITY"].balance |> should equal (AUD 100000)
+        a2.Accounts.["ASSETS"].postings |> should equal (PersistentQueue.Empty.Enqueue t.postings.[0])
+        a2.Accounts.["EQUITY"].postings |> should equal (PersistentQueue.Empty.Enqueue t.postings.[1])
