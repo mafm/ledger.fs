@@ -1,6 +1,8 @@
 # Ledger.fs: command-line, double-entry accounting in FSharp
 
-**Ledger.fs** is a simple, command-line, double-entry accounting
+[WORK IN PROGRESS]
+
+**Ledger.fs** is a _simple_, command-line, double-entry accounting
 system. It reads transactions written in a simple format from a text
 file and produces summary reports as text (or, sooon ... an excel spreadsheet.)
 

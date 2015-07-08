@@ -45,8 +45,8 @@ type ``Test Register Report`` () =
                                          account = "Assets:Bankwest:Cheque";
                                          amount = AUD 62105;}]
         let expected = {RegisterReport.account = "Expenses";
-                        first = None;
-                        last = None;
+                        from = None;
+                        until = None;
                         lines = [{date = "2013-01-05";
                                   amount = AUD 9853;
                                   description = "I bought some groceries and paid using the cheque account.";

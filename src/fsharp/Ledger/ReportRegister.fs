@@ -1,6 +1,6 @@
 ﻿/// Report showing running balance in an account
 
-/// XXX/TODO: Should allow start/end dates to be specified.
+/// XXX/TODO: Should allow from/until dates to be specified.
 
 module ReportRegister
 
@@ -14,14 +14,14 @@ open PersistentCollections
 type RegisterReportLine = {
     date: Date
     amount: Amount
-    description: Description
-    account: AccountName       // In general, we will book to sub-accounts. Lines show (sub) account we booked to
     balance: Amount
+    description: Description
+    account: AccountName       // In general, transactions book to sub-account of target a/c. Lines show (sub) account booked to    
     }
 
 type RegisterReport = {account: AccountName
-                       first: Date option
-                       last: Date option
+                       from: Date option
+                       until: Date option
                        lines: RegisterReportLine list}
 
 let helpPosting (p:Posting) (account:AccountName) openingBalance (date: Date) (description : Description) (linesSoFar: PersistentQueue<RegisterReportLine>) =
@@ -56,8 +56,8 @@ let rec helpTransactions (t: Transaction list) (account:AccountName) openingBala
 let registerReport (input: InputFile) (account: AccountName) = 
     let (lines, finalBalance) = helpTransactions (transactions input) account zeroAmount PersistentQueue.Empty
     {account = account;
-     first = None;
-     last = None;
+     from = None;
+     until = None;
      lines = (List.ofSeq lines)}
 
 let printRegisterReportLine line =
@@ -69,10 +69,10 @@ let printRegisterReportLine line =
 
 let printRegisterReport report =
     printf "Account: %s " report.account    
-    match report.first with
+    match report.from with
     | Some date -> printf "From: %s " date
     | None -> ()
-    match report.last with
+    match report.until with
     | Some date -> printf "Until: %s " date
     | None -> ()
     printf "\n"
