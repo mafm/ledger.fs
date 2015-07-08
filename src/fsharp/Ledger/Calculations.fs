@@ -59,7 +59,6 @@ let isSubAccountOf (a: AccountName) (b: AccountName) =
     startsWith (canonicalAccountName a) (canonicalAccountName b)
 
 /// XXX: affectedBy(Posting/Transaction) should be a method on AccountName, which should be a class. Do we even need these at all?
-
 let postingAffects (p:Posting) (a: AccountName) =
     (isSubAccountOf p.account a)
 /// XXX: affectedBy(Posting/Transaction) should be a method on AccountName, which should be a class. Do we even need these at all?

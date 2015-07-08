@@ -4,7 +4,7 @@ open FParsec
 open InputTypes
 open Misc
 
-type ConfigParse =
+type ParseResult =
     | ParseError of string
     | ParseSuccess of InputFile
 
