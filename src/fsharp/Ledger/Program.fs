@@ -23,14 +23,12 @@
 
 open Parse
 open Calculations
+open InputTypes
+open InternalTypes
+open Misc
+open ReportRegister
 
 exception UnableToParseFile of filename: string * message: string
-
-let parseInputFile filename =
-    let parseResult = Parse.readInputFile filename
-    match parseResult with
-        | ParseSuccess items -> items
-        | ParseError message -> raise (UnableToParseFile(filename, message))
 
 let fatal message =
     printfn "Fatal error: %s" message
@@ -40,11 +38,19 @@ let fatal message =
     System.Threading.Thread.Sleep(60 * 1000)
     System.Environment.Exit 1
 
-[<EntryPoint>]
-let main argv =
-    try
-        let input = parseInputFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
-        match checkDateOrder (transactions input) with
+let parseInputFile filename =
+    let parseResult = Parse.readInputFile filename
+    match parseResult with
+        | ParseSuccess items -> items
+        | ParseError message -> raise (UnableToParseFile(filename, message))
+
+/// XXX: To validate input file we need to (at least) check:
+///      - transactions are in date order
+///      - transactions balance
+///      - all account names in transactions are valid.
+///      - all balance-verification assertions are true.
+let validate (input: InputFile) =
+    match checkDateOrder (transactions input) with
             | OK -> ()
             | Problem(prev, next) ->
                 fatal (sprintf "Transactions not in date order.\n\
@@ -53,10 +59,18 @@ let main argv =
                                 after transaction dated %s\n\
                                 \t%s"
                                next.date next.description prev.date prev.description)
-    /// XXX: To validate input file we need to (at least) check:
-    ///      - transactions are in date order
-    ///      - transactions balance
-    ///      - all account names in transactions are valid.
+                                                  
+[<EntryPoint>]
+let main argv =
+    try
+        let timer = new System.Diagnostics.Stopwatch()
+        let input = parseInputFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
+            (validate input)
+            printfn "Elapsed Time: %i ms." timer.ElapsedMilliseconds
+            let report = (registerReport input "Expenses") in do
+                printf "Elapsed Time: %i ms." timer.ElapsedMilliseconds
+                (printRegisterReport report)
+                printf "Elapsed Time: %i ms." timer.ElapsedMilliseconds
     with
     | UnableToParseFile(f,m) ->
         fatal (sprintf "Error in parsing input file: '%s'\n%s" f m)

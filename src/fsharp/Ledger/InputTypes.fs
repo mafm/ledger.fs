@@ -15,6 +15,8 @@ type Amount =
     /// AUD amounts are stored as cents, and converted to dollars on input/output. 
     | AUD of int
 
+let zeroAmount = AUD 0
+
 type Posting = { account: AccountName
                  amount:  Amount}               
 

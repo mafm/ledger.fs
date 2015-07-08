@@ -70,7 +70,9 @@ let splitAccountName (name: AccountName) =
         match components with
             | root::rest -> {canonical = (canonicalRootName name); input = root} :: (helper rest)
             | [] -> raise (BadAccountName(name, "Empty name"))
-
+/// Canonical parts of splitAccountName
+let canonicalAccountName (name: AccountName) =
+    (List.map (fun x -> x.canonical) (splitAccountName name))
 
 /// An account contains:
 /// - a balance

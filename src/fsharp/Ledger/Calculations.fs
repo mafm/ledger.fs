@@ -2,6 +2,7 @@
 
 open InputTypes
 open InternalTypes
+open Misc
 
 /// Extract Transaction items
 let transactions inputs =
@@ -52,4 +53,22 @@ let filter (transactions : Transaction list) (first : Date option) (last : Date 
                         | None -> transactions
                         | Some date -> List.filter (fun t -> t.date <= date) transactions
     transactions
+
+// Is a a sub-account of b?
+let isSubAccountOf (a: AccountName) (b: AccountName) =
+    startsWith (canonicalAccountName a) (canonicalAccountName b)
+
+/// XXX: affectedBy(Posting/Transaction) should be a method on AccountName, which should be a class. Do we even need these at all?
+
+let postingAffects (p:Posting) (a: AccountName) =
+    (isSubAccountOf p.account a)
+/// XXX: affectedBy(Posting/Transaction) should be a method on AccountName, which should be a class. Do we even need these at all?
+let transactionAffects (t: Transaction) (a: AccountName) =
+    let rec helper postings =
+        match postings with
+            | p::postings -> match (postingAffects p a) with
+                                | true -> true
+                                | false -> (helper postings)
+            | [] -> false
+    (helper t.postings)
 
