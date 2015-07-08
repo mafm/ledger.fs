@@ -1,4 +1,4 @@
-# Ledger.fs: command-line, double-entry accounting in FSharp
+# Ledger.fs: _Simple_ command-line, double-entry accounting in FSharp
 
 [WORK IN PROGRESS]
 

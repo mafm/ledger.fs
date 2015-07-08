@@ -11,13 +11,13 @@ open InternalTypes
 open Misc
 open PersistentCollections
 
-type RegisterReportLine = {
-    date: Date
-    amount: Amount
-    balance: Amount
-    description: Description
-    account: AccountName       // In general, transactions book to sub-account of target a/c. Lines show (sub) account booked to    
-    }
+type RegisterReportLine = {date: Date
+                           amount: Amount
+                           balance: Amount
+                           description: Description
+                           // In transactions often post to a sub-account of target a/c.
+                           // Record the (sub-)account actually posted to.
+                           account: AccountName}
 
 type RegisterReport = {account: AccountName
                        from: Date option
@@ -26,13 +26,13 @@ type RegisterReport = {account: AccountName
 
 let helpPosting (p:Posting) (account:AccountName) openingBalance (date: Date) (description : Description) (linesSoFar: PersistentQueue<RegisterReportLine>) =
     if   (isSubAccountOf p.account account) then
-        let newBalance = (addAmounts openingBalance p.amount) in            
+        let newBalance = (addAmounts openingBalance p.amount) in
             ((linesSoFar.Enqueue {date=date;
                                   account=p.account;
                                   amount = p.amount;
                                   balance = newBalance;
                                   description=description}),
-             newBalance) 
+             newBalance)
 
     else
         (linesSoFar, openingBalance)
@@ -43,7 +43,7 @@ let rec helpPostings (p:Posting list) (account:AccountName) openingBalance (date
     | p::rest ->
         let (newLines, newBalance) = helpPosting p account openingBalance date description linesSoFar in
         helpPostings rest account newBalance date description newLines
-    
+
 let helpTransaction (t: Transaction) (account:AccountName) openingBalance (linesSoFar: PersistentQueue<RegisterReportLine>) =
     helpPostings t.postings (account:AccountName) openingBalance t.date t.description (linesSoFar: PersistentQueue<RegisterReportLine>)
 
@@ -53,7 +53,7 @@ let rec helpTransactions (t: Transaction list) (account:AccountName) openingBala
     | t::rest -> let (newLines, newBalance) = helpTransaction t account openingBalance linesSoFar in
                  helpTransactions rest account newBalance newLines
 
-let registerReport (input: InputFile) (account: AccountName) = 
+let registerReport (input: InputFile) (account: AccountName) =
     let (lines, finalBalance) = helpTransactions (transactions input) account zeroAmount PersistentQueue.Empty
     {account = account;
      from = None;
@@ -68,7 +68,7 @@ let printRegisterReportLine line =
     printf "Description: %s\n" line.description
 
 let printRegisterReport report =
-    printf "Account: %s " report.account    
+    printf "Account: %s " report.account
     match report.from with
     | Some date -> printf "From: %s " date
     | None -> ()
@@ -78,5 +78,3 @@ let printRegisterReport report =
     printf "\n"
     for line in report.lines do
         printRegisterReportLine line
-
-
