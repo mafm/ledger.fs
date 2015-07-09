@@ -119,7 +119,7 @@ Ledger.fs is an FSharp rewrite of
 [ledger.py](https://github.com/mafm/ledger.py/) which was inspired by John Wiegley's
 [Ledger](http://www.ledger-cli.org/)
 
-[ledger.py](https://github.com/mafm/ledger.py/) is also similar to
+[Ledger.py](https://github.com/mafm/ledger.py/) is also similar to
 some older double-entry accounting software I wrote using wxPython in
 2004. Although that program had a GUI, and I used it for nearly ten
 years, it was more complex than
@@ -132,3 +132,7 @@ needed to add multi-currency and multi-entity support. Now that
 Microsoft give away F# development tools, it's hard to justify writing
 more python code.
 
+Ledger.fs is simpler than
+[ledger.py](https://github.com/mafm/ledger.py/), mainly because it's
+easier to restructure F# code without breakage than it is to
+restructure python code.
