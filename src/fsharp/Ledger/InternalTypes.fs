@@ -181,11 +181,15 @@ type Account = struct
 
 type Accounts private (accounts: PersistentDictionary<string, Account>) =
     let accounts = accounts
-    // I want to be able to create a no-argument constructor, but that's not possible.
-    // Instead, have a constructor that takes no arguments, and hope nobdy private constructor that takes a set of accounts, and a static
-    // "create" method with no arguments.
-    new () = Accounts(PersistentDictionary.Empty)
     member this.Accounts = accounts
+    // NB: main constructor is private. The public ones are below.
+    new () = Accounts(PersistentDictionary.Empty)
+    new (transactions: Transaction list) =
+        let rec helper (accounts:Accounts) (transactions: Transaction list)  =
+            match transactions with
+            | [] -> accounts
+            | t::transactions -> (helper (accounts.Book t) transactions)
+        Accounts((helper (new Accounts()) transactions).Accounts)
     /// Book postings to relevant account.
     member this.Book (p: Posting) =
         let accountDetails = (splitAccountName p.account)
