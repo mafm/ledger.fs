@@ -13,7 +13,7 @@ to maintain an audit trail.
 Ledger.fs is like John Wiegley's
 [Ledger](http://www.ledger-cli.org/), but [simpler](https://github.com/mafm/ledger.py/blob/master/doc/Ledger.md).
 
-This code is basically a rewrite of an earlier python implementation -
+This code is basically a rewrite of an earlier python implementation:
 [ledger.py](https://github.com/mafm/ledger.py/). The F# implementation
 is simpler, easier to extend, and runs at least an order of magnitude faster.
 
@@ -100,20 +100,18 @@ port the old ones over from python.
 
 ## Status
 
-I will soone be using this program on a regular basis to do real work. I have been using
-[ledger.py](https://github.com/mafm/ledger.py/) for real work on a regular basis. I believe
-that what _has_ been implemented is more or less correct. However, this program hasn't
-been extensively tested, so use it at your own risk.
+I'm about to use this software on a regular basis to do real work. I
+have been using [ledger.py](https://github.com/mafm/ledger.py/) for
+real work on a regular basis. I believe that what _has_ been
+implemented is more or less correct. However, this program hasn't been
+extensively tested, so use it at your own risk.
 
 Lots of useful easy-to-implement features have not yet been
-implemented. I am currently (July 2015) attempting to get this working, and plan to add asap:
-- Excel-formatted reports - the python version did this
-- multi-currency support
+implemented. I am currently (July 2015) attempting to get this
+working, and plan to add the following features asap: 
+- Excel-formatted reports ([ledger.py](https://github.com/mafm/ledger.py/) had this) 
+- multi-currency support 
 - multi-entity support
-
-The complexity of the code in python was past the point where I was
-really happy adding the multi-currency/multi-entity features in
-python. Working in FSharp is dramatically more pleasant.
 
 ## Origins
 
@@ -121,10 +119,16 @@ Ledger.fs is an FSharp rewrite of
 [ledger.py](https://github.com/mafm/ledger.py/) which was inspired by John Wiegley's
 [Ledger](http://www.ledger-cli.org/)
 
-I wanted to add some functionality to ledger.py and FSharp is a lot easier
-to deal with long-term than python.
+[ledger.py](https://github.com/mafm/ledger.py/) is also similar to
+some older double-entry accounting software I wrote using wxPython in
+2004. Although that program had a GUI, and I used it for nearly ten
+years, it was more complex than
+[ledger.py](https://github.com/mafm/ledger.py/), and I found it less
+convenient to use.
 
-Ledger.py is also similar to some older double-entry accounting
-software I wrote using wxPython in 2004. Although that program had a
-GUI, and I used it for nearly ten years, it was more complex than
-ledger.py, and I found it less convenient to use.
+I basically gave up on [ledger.py](https://github.com/mafm/ledger.py/)
+because it is pointlessly difficult to refactor python code, and I
+needed to add multi-currency and multi-entity support. Now that
+Microsoft give away F# development tools, it's hard to justify writing
+more python code.
+
