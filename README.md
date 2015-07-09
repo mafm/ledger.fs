@@ -13,11 +13,9 @@ to maintain an audit trail.
 Ledger.fs is like John Wiegley's
 [Ledger](http://www.ledger-cli.org/), but [simpler](https://github.com/mafm/ledger.py/blob/master/doc/Ledger.md).
 
-This code is basically a rewrite of an earlier python equivalent -
-[ledger.py](https://github.com/mafm/ledger.py/). The python code was
-not particularly complex, but the FSharp code is dramatically easier
-to understand and extend because of the help from the type system. It
-also runs an order of magnitude more quickly.
+This code is basically a rewrite of an earlier python implementation -
+[ledger.py](https://github.com/mafm/ledger.py/). The F# implementation
+is simpler, easier to extend, and runs at least an order of magnitude faster.
 
 ## What it does
 
