@@ -27,6 +27,7 @@ open InputTypes
 open InternalTypes
 open Misc
 open ReportRegister
+open ReportBalances
 
 exception UnableToParseFile of filename: string * message: string
 
@@ -66,11 +67,15 @@ let main argv =
         let timer = new System.Diagnostics.Stopwatch()
         let input = parseInputFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
             (validate input)
-            printfn "Elapsed Time: %i ms." timer.ElapsedMilliseconds
+            printfn "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
             let report = (registerReport input "Expenses") in do
-                printf "Elapsed Time: %i ms." timer.ElapsedMilliseconds
+                printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
                 (printRegisterReport report)
-                printf "Elapsed Time: %i ms." timer.ElapsedMilliseconds
+                printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
+                let report = (balanceReport input) in do
+                printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
+                (printBalanceReport report)
+                printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
     with
     | UnableToParseFile(f,m) ->
         fatal (sprintf "Error in parsing input file: '%s'\n%s" f m)

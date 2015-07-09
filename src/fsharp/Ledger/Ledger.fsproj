@@ -63,6 +63,7 @@
     <Compile Include="Calculations.fs" />
     <Compile Include="ReportRegister.fs" />
     <Compile Include="RegisterReportTest.fs" />
+    <Compile Include="ReportBalances.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
