@@ -163,33 +163,26 @@ type Account = struct
                     None
     end
 
-/// A set of accounts - ie
-/// - a tree structured set of accounts and their sub-accounts
-/// each node contains:
+/// A "set" of accounts - ie
+/// - a tree structured collection of accounts and their sub-accounts
+///
+/// Each node contains:
 /// - the preferred spelling of the account's name
 /// - the set of postings affecting the account, and
 /// - the account's balance
 ///
 /// In the python code, this was called account-tree or something like that.
 ///
-/// Perhaps when we create an empty Accounts object, it should
+/// Perhaps when we create an empty Accounts object, it probably should
 /// contain a top-level account for each of the five basic account types.
-/// On the other hand, if a set of transactions is missing some of the basic
-/// account types, we can put them into a structure that doesn't have those
-/// root accounts. When we generate reports, we should get enough type help
-/// that the report code doesn't assume they are there when they're not.
+/// On the other hand, if a set of transactions doesn't use one of the basic
+/// account types, why do we need to create it when we process those transactions?
+/// When generating reports, we should should be able to cope with some of the
+/// basic account types being absent - it's not really a big issue...
 
 type Accounts private (accounts: PersistentDictionary<string, Account>) =
     let accounts = accounts
     member this.Accounts = accounts
-    // NB: main constructor is private. The public ones are below.
-    new () = Accounts(PersistentDictionary.Empty)
-    new (transactions: Transaction list) =
-        let rec helper (accounts:Accounts) (transactions: Transaction list)  =
-            match transactions with
-            | [] -> accounts
-            | t::transactions -> (helper (accounts.Book t) transactions)
-        Accounts((helper (new Accounts()) transactions).Accounts)
     /// Book postings to relevant account.
     member this.Book (p: Posting) =
         let accountDetails = (splitAccountName p.account)
@@ -206,6 +199,13 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
         (List.fold (fun (accounts : Accounts) (p: Posting) -> (accounts.Book p))
                    this
                    t.postings)
+    /// Book a bunch of transactions to a pre-existing Accounts object
+    member this.Book (transactions: Transaction list) =
+        let rec helper (accounts:Accounts) (transactions: Transaction list)  =
+            match transactions with
+            | [] -> accounts
+            | t::transactions -> (helper (accounts.Book t) transactions)
+        (helper this transactions)
     // Given an account name, find the account
     member this.find (account: AccountName) =
         let accountDetails = (splitAccountName account)
@@ -216,3 +216,7 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
                     (accounts.[accountName.canonical].find subAccountDetails)
                 else
                     None
+    // NB: primary constructor is private. The public constructors are below.
+    new () = Accounts(PersistentDictionary.Empty)
+    new (transactions: Transaction list) =
+        Accounts(((new Accounts()).Book transactions).Accounts)
