@@ -71,3 +71,58 @@ let transactionAffects (t: Transaction) (a: AccountName) =
             | [] -> false
     (helper t.postings)
 
+/// A tree-structured set of account names. The reason we want this is sometimes we want to deal
+/// with a sequence of accounts more or less in parallel, and to visit a particular subset of
+/// them. Typically the last set of accounts will contain all the ones we want to visit. Here's
+/// a way of specifying the map of accounts we want to traverse.
+/// (There must be a better name for this type.)
+type AccountNameTree =
+    | Node of name: AccountNameComponents * children:  AccountNameTree list
+
+// Given an account (and it's canonical name), construct the tree of account names rooted at the account.
+// Here's the only real trick in the whole system:
+// If an account has no postings of its own and exactly one sub-account, we treat the subaccount as the
+// account. This produces neater reports - especially in text.
+let rec constructAccountNameTree (a: Account) (canonicalName: string) =
+    let subAccountsWithCNames = [for KeyValue(cName, subAccount) in
+                                    (a.subAccounts |> Seq.sortBy (fun (KeyValue(k,v)) -> v.name))
+                                 -> (subAccount, cName)]
+    match subAccountsWithCNames with
+        | [(onlyChild, onlyChildCName)] when (a.postings = onlyChild.postings)
+            -> match (constructAccountNameTree onlyChild onlyChildCName) with
+                Node(subAccountName, subAccountChildren)
+                  -> Node(({canonical = canonicalName; input = a.name}::subAccountName),
+                          subAccountChildren)
+        | _ -> Node([{canonical = canonicalName; input = a.name}],
+                    [for (subAccount, cName) in subAccountsWithCNames -> (constructAccountNameTree subAccount cName)])
+
+(* XXX: When I add tests for this module, want to ensure that on the account tree constructed from
+   the sample transactions we get the following result:
+
+  let a = Accounts(transactions input)
+
+  let tryit rootAccName =
+    match a.find(rootAccName) with
+    | None -> None
+    | Some a -> Some (constructAccountNameTree a rootAccName)
+
+  (tryit "expenses") ==  Some (Node
+                                ([{canonical = "expenses";
+                                   input = "EXPENSES";}],
+                                 [Node ([{canonical = "ELECTRICITY";
+                                          input = "Electricity";}],
+                                        []);
+                                  Node ([{canonical = "FOOD";
+                                          input = "Food";};
+                                         {canonical = "GROCERIES";
+                                          input = "Groceries";}],
+                                        []);
+                                  Node ([{canonical = "MOTOR";
+                                          input = "Motor";};
+                                         {canonical = "FUEL";
+                                          input = "Fuel";}],
+                                        [])]))
+ ie: expenses:motor gets converted to motor:fuel, expenses:food gets converted to food:groceries,
+ because in both of these, there is only a single sub-account and that sub-account contains all
+ the postings to the original account.
+ *)

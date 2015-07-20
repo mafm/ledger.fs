@@ -58,8 +58,10 @@ type AccountNameComponent = {
     canonical: string;
     input: string}
 
+type AccountNameComponents = AccountNameComponent list
+
 /// Break AccountName into ordered list of components.
-/// For each level of the account, we canonical & input components.
+/// For each level of the account, we produce canonical & input components.
 /// Checkout out unit test for an example of what this does.
 let splitAccountName (name: AccountName) =
         let components = name.Split(':') |> Array.toList
