@@ -15,3 +15,8 @@ let rec startsWith<'X when 'X: equality> (a :'X list) (b :'X list) =
         | B::Bs -> match a with
                    | A::As -> (A=B) && (startsWith As Bs)
                    | _ -> false
+
+// Is this actually useful anywhere? Can I use this in practice?
+type NonEmptyList<'t> =
+    | One of 't
+    | More of first:'t * rest:NonEmptyList<'t>
