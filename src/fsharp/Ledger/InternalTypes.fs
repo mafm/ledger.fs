@@ -3,6 +3,8 @@
 open InputTypes
 open PersistentCollections
 
+exception EmptyAccountNameComponents
+
 type AccountType =
     | Asset
     | Liability
@@ -209,8 +211,17 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
             | t::transactions -> (helper (accounts.Book t) transactions)
         (helper this transactions)
     // Given an account name, find the account
+    member this.find (name: AccountNameComponents) =
+        match name with
+            | []  -> raise EmptyAccountNameComponents
+            | accountName::subAccountDetails ->
+                if accounts.ContainsKey(accountName.canonical) then
+                    (accounts.[accountName.canonical].find subAccountDetails)
+                else
+                    None
+    // Given an account name, find the account
     member this.find (account: AccountName) =
-        let accountDetails = (splitAccountName account)
+        (this.find (splitAccountName account)
         match accountDetails with
             | []  -> raise (BadAccountName(account, "Empty name"))
             | accountName::subAccountDetails ->
