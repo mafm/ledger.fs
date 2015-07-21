@@ -31,7 +31,7 @@ let rec accountBalanceReport (name:string)  (a: Account) =
 
 let balanceReport (input: InputFile) =    
     let accounts = Accounts(transactions input)
-    let addLine account lines =
+    let addLine (account:AccountName) lines =
         match (accounts.find account) with
         | None -> lines
         | Some a -> (accountBalanceReport a.fullName a)::lines    

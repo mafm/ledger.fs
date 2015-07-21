@@ -70,11 +70,19 @@ let main argv =
             printfn "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
             let report = (registerReport input "Expenses") in do
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
+                (printf "\nDEMO: EXPENSES REGISTER\n")
                 (printRegisterReport report)
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
+                (printf "\nDEMO: ALL BALANCES\n")
                 let report = (balanceReport input) in do
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
                 (printBalanceReport report)
+                printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
+                (printf "\nDEMO: BALANCES BY DATE\n")
+                let dates = ["2013-01-05";"2013-01-15"]
+                let report = (ReportBalancesByDate.accountBalancesByDateReport input dates) in do
+                printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
+                (ReportBalancesByDate.printReport report)
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
     with
     | UnableToParseFile(f,m) ->

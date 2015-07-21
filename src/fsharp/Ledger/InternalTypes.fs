@@ -221,14 +221,7 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
                     None
     // Given an account name, find the account
     member this.find (account: AccountName) =
-        (this.find (splitAccountName account)
-        match accountDetails with
-            | []  -> raise (BadAccountName(account, "Empty name"))
-            | accountName::subAccountDetails ->
-                if accounts.ContainsKey(accountName.canonical) then
-                    (accounts.[accountName.canonical].find subAccountDetails)
-                else
-                    None
+        (this.find (splitAccountName account))
     // NB: primary constructor is private. The public constructors are below.
     new () = Accounts(PersistentDictionary.Empty)
     new (transactions: Transaction list) =
