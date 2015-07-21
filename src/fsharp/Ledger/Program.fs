@@ -90,7 +90,7 @@ let demo () =
 let usage = """Ledger.fs: simple command-line double-entry accounting.
 
             Usage:
-            Ledger.fs <input-filename> running <account>
+            Ledger.fs <input-filename> running-balance <account>
             Ledger.fs <input-filename> balances
             Ledger.fs <input-filename> balances-by-date <date>...
 
@@ -105,7 +105,7 @@ let main argv =
     let input = (parseInputFile inputFileName)
     (validate input)
 
-    if (arguments.["running"].IsTrue) then
+    if (arguments.["running-balance"].IsTrue) then
         (printRegisterReport (registerReport input (string arguments.["<account>"])))
 
     if (arguments.["balances"].IsTrue) then

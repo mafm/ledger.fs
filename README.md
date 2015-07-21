@@ -1,6 +1,4 @@
-# Ledger.fs: _Simple_ command-line, double-entry accounting in F#.
-
-# (Warning - under construction)
+# Ledger.fs: _Simple_ command-line double-entry accounting in F#.
 
 **Ledger.fs** is a _simple_, command-line, double-entry accounting
 system. It reads transactions written in a simple format from a text
@@ -17,9 +15,15 @@ This code is basically a rewrite of an earlier python implementation:
 [ledger.py](https://github.com/mafm/ledger.py/). The F# implementation
 is simpler, easier to extend, and runs at least an order of magnitude faster.
 
+**Warning - currently under construction.** This _does_ calculate the
+reports described in this README, but doesn't yet do useful extra stuff like:
+- Excel-formatted reports
+- multi-currency input-files
+- multi-entity input-files
+
 ## What it does
 
-Ledger.fs reads an input file that's written in a simple file like this:
+Ledger.fs reads an input file that's written in a simple format like this:
 ```
 2013-01-01 I began the year with $1000 in my cheque account.
   Assets:Bankwest:Cheque      $1,000
@@ -69,12 +73,12 @@ or this:
 ```
 or this:
 ```
-> Ledger.fs examples/sample.transactions running expenses
+> Ledger.fs examples/sample.transactions running-balance expenses
       Date       Amount Balance Account                 Description
       ----       ------ ------- -------                 -----------
-2013-01-05	 $98.53	 $98.53	Expenses:Food:Groceries	I bought some groceries and paid using the cheque account.
-2013-01-10	$156.54	 $58.01	Expenses:Motor:Fuel    	I bought some petrol, and paid using a credit card.
-2013-01-15	$436.96	$280.42	Expenses:Electricity   	I paid my electricity bill.
+2013-01-05       $98.53  $98.53 Expenses:Food:Groceries I bought some groceries and paid using the cheque account.
+2013-01-10       $58.01 $156.54 Expenses:Motor:Fuel     I bought some petrol, and paid using a credit card.
+2013-01-15      $280.42 $436.96 Expenses:Electricity    I paid my electricity bill.
 ```
 ## Getting started
 The program is currently a visual studio solution. You'll need something from microsoft to build it.
@@ -83,24 +87,29 @@ I used visual studio community 2013.
 # Grab the code
 git clone git://github.com/mafm/ledger.fs
 cd ledger.fs
-```
-(Whatever you need to do to build this .... it should be straightforward ....)
-```
+# <Whatever you need to do to build this .... it should be straightforward ....>
+
 # Check out the usage
 Ledger.fs --help
-# Generate some example reports
+
+# Generate a simple report - just the account balances.
+# Notice that accounts are organised hierarchically....
 Ledger.fs examples/sample.transactions balances
-# See balances at two dates, and changes between them.
+
+# Calculate balances at two dates, and the changes between them.
 Ledger.fs examples/sample.transactions balances-by-date 2013-01-05 2013-01-15
-# We can even give *more* than two dates, see the changes in balances between them!
+
+# We can specify *more* than two dates, and see the changes in balances between them!
 Ledger.fs examples/sample.transactions balances-by-date 2013-01-05 2013-01-10 2013-01-15
-Ledger.fs examples/sample.transactions running Expenses
-Ledger.fs examples/sample.transactions running Expenses:Electricity
+
+# And see the running-balance balance of an account
+Ledger.fs examples/sample.transactions running-balance Expenses
+Ledger.fs examples/sample.transactions running-balance Expenses:Electricity
 ```
 
 There is documentation outlining how to use the ledger.py in the
 [Introduction](https://github.com/mafm/ledger.py/blob/master/doc/Introduction.md)
-file in the doc folder. Most of that applies to ledger.fs.
+file in its doc folder. Most of that applies to ledger.fs.
 
 ### Requirements
 
@@ -128,7 +137,7 @@ working, and plan to add the following features asap:
 
 ## Origins
 
-Ledger.fs is an FSharp rewrite of
+Ledger.fs is an F# rewrite of
 [ledger.py](https://github.com/mafm/ledger.py/) which was inspired by John Wiegley's
 [Ledger](http://www.ledger-cli.org/)
 
