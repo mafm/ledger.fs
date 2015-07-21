@@ -42,36 +42,43 @@ VERIFY-BALANCE 2013-02-01 Assets:Bankwest:Cheque 621.05
 ```
 and produces reports like this:
 ```
-$Ledger.fs examples/sample.transactions --print-balances
-   $621.05 Assets:Bankwest:Cheque
- $1,000.00 Equity:OpeningBalances
-   $436.96 Expenses
-   $280.42   Electricity
-    $98.53   Food:Groceries
-    $58.01   Motor:Fuel
-    $58.01 Liabilities:Bankwest:Visa
+> Ledger.fs examples/sample.transactions balances
+  Balance Account
+  ------- -------
+  $621.05 Assets:Bankwest:Cheque
+   $58.01 Liabilities:Bankwest:Visa
+  $436.96 Expenses
+  $280.42   Electricity
+   $98.53   Food:Groceries
+   $58.01   Motor:Fuel
+$1,000.00 Equity:OpeningBalances
 ```
 or this:
 ```
-$Ledger examples/sample.transactions --print-balances --first-date 2013-01-05 --last-date 2013-01-15
- 2013-01-05 2013-01-15   Change Account
-    $901.47    $621.05 -$280.42 Assets:Bankwest:Cheque
-  $1,000.00  $1,000.00    $0.00 Equity:OpeningBalances
-     $98.53    $436.96  $338.43 Expenses
-          -    $280.42  $280.42   Electricity
-     $98.53     $98.53    $0.00   Food:Groceries
-          -     $58.01   $58.01   Motor:Fuel
-          -     $58.01   $58.01 Liabilities:Bankwest:Visa
+> Ledger examples/sample.transactions balances-by-date 2013-01-05 2013-01-15
+     Balance                  Change
+  2013-01-05 2013-01-15   2013-01-15 Account
+  ---------- ----------   ---------- -------
+     $901.47    $621.05     -$280.42 Assets:Bankwest:Cheque
+           -     $58.01       $58.01 Liabilities:Bankwest:Visa
+      $98.53    $436.96      $338.43 Expenses
+           -    $280.42      $280.42   Electricity
+      $98.53     $98.53        $0.00   Food:Groceries
+           -     $58.01       $58.01   Motor:Fuel
+   $1,000.00  $1,000.00        $0.00 Equity:OpeningBalances
 ```
 or this:
 ```
-$Ledger.fs examples/sample.transactions --print-register Expenses
+> Ledger.fs examples/sample.transactions running expenses
+      Date       Amount Balance Account                 Description
+      ----       ------ ------- -------                 -----------
 2013-01-05	 $98.53	 $98.53	Expenses:Food:Groceries	I bought some groceries and paid using the cheque account.
 2013-01-10	$156.54	 $58.01	Expenses:Motor:Fuel    	I bought some petrol, and paid using a credit card.
 2013-01-15	$436.96	$280.42	Expenses:Electricity   	I paid my electricity bill.
 ```
 ## Getting started
 The program is currently a visual studio solution. You'll need something from microsoft to build it.
+I used visual studio community 2013.
 ```
 # Grab the code
 git clone git://github.com/mafm/ledger.fs
@@ -79,15 +86,21 @@ cd ledger.fs
 ```
 (Whatever you need to do to build this .... it should be straightforward ....)
 ```
+# Check out the usage
+Ledger.fs --help
 # Generate some example reports
-Ledger.fs examples/sample.transactions --print-balances
-Ledger.fs examples/sample.transactions --print-register Expenses
-Ledger.fs examples/sample.transactions --print-register Expenses:Electricity
+Ledger.fs examples/sample.transactions balances
+# See balances at two dates, and changes between them.
+Ledger.fs examples/sample.transactions balances-by-date 2013-01-05 2013-01-15
+# We can even give *more* than two dates, see the changes in balances between them!
+Ledger.fs examples/sample.transactions balances-by-date 2013-01-05 2013-01-10 2013-01-15
+Ledger.fs examples/sample.transactions running Expenses
+Ledger.fs examples/sample.transactions running Expenses:Electricity
 ```
 
 There is documentation outlining how to use the ledger.py in the
 [Introduction](https://github.com/mafm/ledger.py/blob/master/doc/Introduction.md)
-file in the doc folder. Most of that applies here.
+file in the doc folder. Most of that applies to ledger.fs.
 
 ### Requirements
 
@@ -108,9 +121,9 @@ extensively tested, so use it at your own risk.
 
 Lots of useful easy-to-implement features have not yet been
 implemented. I am currently (July 2015) attempting to get this
-working, and plan to add the following features asap: 
-- Excel-formatted reports ([ledger.py](https://github.com/mafm/ledger.py/) had this) 
-- multi-currency support 
+working, and plan to add the following features asap:
+- Excel-formatted reports ([ledger.py](https://github.com/mafm/ledger.py/) had this)
+- multi-currency support
 - multi-entity support
 
 ## Origins

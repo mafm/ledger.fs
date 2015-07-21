@@ -70,18 +70,7 @@ let printRegisterReportLine line =
     printf "%s\n" line.description
 
 let printRegisterReport report =
-    printf "Account: %s\n" report.account
-    match report.from with
-    | Some date -> printf "From: %s\n" date
-    | None -> ()
-    match report.until with
-    | Some date -> printf "Until: %s\n" date
-    | None -> ()
-    printf "Date\t"
-    printf "Amount\t"
-    printf "Balance\t"
-    printf "Account\t"
-    printf "Description\n"
-    printf "\n"
+    printf "Date\tAmount\tBalance\tAccount\tDescription\n"
+    printf "----\t------\t-------\t-------\t-----------\n"
     for line in report.lines do
         printRegisterReportLine line

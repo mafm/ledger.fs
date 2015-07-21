@@ -1,0 +1,46 @@
+* Bugs
+** Accounts reportted with "canonical", not "input" names
+
+   When we process a set of transactions, top-level Accounts structure get
+   created with wrong ".input" field - they get the account's canonical name,
+   not it's "input" name.
+  
+   Hmmm ... This is problem in balances report, but not in balances-by-date report....
+
+   
+* Enhancements
+** Validation
+*** input/transaction files
+**** Need to make sure transactions at least balance!
+**** Need to make balance-verify statements work!
+**** Convert whitespace in descriptions to space characters
+*** Command-line arguments
+**** date arguments need to be checked for validity
+**** date arguments need to be sorted into ascending order
+**** account arguments need to be checked for validity
+     
+** Better exception handling
+   At the moment, we don't even handle missing input file exceptions.
+** Reporting
+*** Add from/to dates to register report
+    If given a <start-date>, it should add all transactions from
+    beginning, and then:
+    - begin with an opening-balance at <start-date>
+    If given an <end-date>, it should not print transactions after
+    that date.
+*** Excel-formatted output
+*** text-formatted
+**** Justify columns
+     appropriately when producing (default) text-formatted reports.       
+
+** Multi-currency
+** Multiple entities
+   Handle multiple entities in a single transaction file.
+** Also - all the XXX & TODO comments throughout the code.   
+** Non-empty list type
+   Where we raise exceptions for empty lists - we could structure the
+   list type so its non-empty - in particular with
+   accountNameComponents. A generic non-empty list type type might
+   avoid a bit of exception raising code that theoretically can't be
+   thrown anyway.
+   

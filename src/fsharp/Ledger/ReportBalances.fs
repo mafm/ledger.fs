@@ -36,10 +36,10 @@ let balanceReport (input: InputFile) =
         match (accounts.find account) with
         | None -> lines
         | Some a -> (accountBalanceReport a.fullName a)::lines    
-    {lines = (addLine "Income"
-             (addLine "Expenses"
-             (addLine "Assets"
+    {lines = (addLine "Assets"
              (addLine "Liabilities"
+             (addLine "Income"
+             (addLine "Expenses"
              (addLine "Equity" [])))))}
     
 let rec printBalanceReportLine indent (line : BalanceReportLine) =    
@@ -48,8 +48,9 @@ let rec printBalanceReportLine indent (line : BalanceReportLine) =
         printf " "
     printf "%s\n" line.account
     for subLine in line.subAccounts do
-        printBalanceReportLine (indent+1) subLine
+        printBalanceReportLine (indent+2) subLine
 
 let printBalanceReport report =
+    printf "Balance\tAccount\n-------\t-------\n"
     for line in report.lines do
         printBalanceReportLine 0 line

@@ -90,10 +90,10 @@ let addLine (name: AccountName) (accounts: DatedAccounts) (dates: Date list) lin
 let accountBalancesByDateReport (input: InputFile) (dates: Date list)  =
     let datedAccounts = (accountsByDate input dates)
     {dates = dates;
-     lines = (addLine "Income" datedAccounts dates
-             (addLine "Expenses" datedAccounts dates
-             (addLine "Assets" datedAccounts dates
+     lines = (addLine "Assets" datedAccounts dates
              (addLine "Liabilities" datedAccounts dates
+             (addLine "Income" datedAccounts dates
+             (addLine "Expenses" datedAccounts dates
              (addLine "Equity" datedAccounts dates [])))))}
 
 let rec printReportLine indent (line : ReportBalancesByDateLine) =
@@ -105,16 +105,30 @@ let rec printReportLine indent (line : ReportBalancesByDateLine) =
         printf " "
     printf "%s\n" line.account
     for subLine in line.subAccounts do
-        printReportLine (indent+1) subLine
+        printReportLine (indent+2) subLine
 
 let printReport report =
+    (* Balance/Change headings line *)
+    if (report.dates.Length > 0) then
+        printf "Balance\t"
+        for i in 1 .. (report.dates.Length-1) do
+            printf "\t"
+    if (report.dates.Length > 1) then
+        printf "Change"
+        for i in 1 .. (report.dates.Length-2) do
+            printf "\t"
+        printf "\n"                            
+    (* date/"Account" headings line*)
     for date in report.dates do    
         printf "%s\t" (Text.fmtDate date)
     match report.dates with        
         | first::rest ->
             for date in rest do    
-                printf "change(%s)\t" date
+                printf "%s\t" date
         | _ -> ()
     printf "Account\n"
+    (printf "%s%s-------\n" 
+        (String.replicate report.dates.Length "----------\t")
+        (String.replicate (report.dates.Length-1) "----------\t"))
     for line in report.lines do
         printReportLine 0 line

@@ -1,6 +1,7 @@
 ﻿module ReportFormatting
 
-/// Code that formats types to be shown to user.
+/// Format our types for the user.
+
 /// For now the only type of formatting we do is plain text.
 /// At least this gives a place to put the text-formatting code.
 

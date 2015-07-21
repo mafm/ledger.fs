@@ -31,6 +31,7 @@ open ReportBalances
 
 exception UnableToParseFile of filename: string * message: string
 
+
 let fatal message =
     printfn "Fatal error: %s" message
     // XXX/TODO: Should generally not delay, unless we know this was started outside
@@ -60,9 +61,7 @@ let validate (input: InputFile) =
                                 after transaction dated %s\n\
                                 \t%s"
                                next.date next.description prev.date prev.description)
-                                                  
-[<EntryPoint>]
-let main argv =
+let demo () =
     try
         let timer = new System.Diagnostics.Stopwatch()
         let input = parseInputFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
@@ -87,5 +86,39 @@ let main argv =
     with
     | UnableToParseFile(f,m) ->
         fatal (sprintf "Error in parsing input file: '%s'\n%s" f m)
-    printfn "%A" argv
+
+let usage = """Ledger.fs: simple command-line double-entry accounting.
+
+            Usage:
+            Ledger.fs <input-filename> running <account>
+            Ledger.fs <input-filename> balances
+            Ledger.fs <input-filename> balances-by-date <date>...
+
+
+            Options:
+            -h --help     Show this help."""
+
+[<EntryPoint>]
+let main argv =
+    let arguments = DocoptNet.Docopt().Apply(usage, argv, exit=true)
+    let inputFileName = (string arguments.["<input-filename>"])
+    let input = (parseInputFile inputFileName)
+    (validate input)
+
+    if (arguments.["running"].IsTrue) then
+        (printRegisterReport (registerReport input (string arguments.["<account>"])))
+
+    if (arguments.["balances"].IsTrue) then
+        (printBalanceReport (balanceReport input))
+
+    if (arguments.["balances-by-date"].IsTrue) then
+                //printf "dates: '%s'"  arguments.["<date>"].AsList()
+        (ReportBalancesByDate.printReport
+            (ReportBalancesByDate.accountBalancesByDateReport input
+            [for d in arguments.["<date>"].AsList -> (string d)]))
+
+
+
+    //demo()
+    //printfn "%A" argv
     0 // return an integer exit code
