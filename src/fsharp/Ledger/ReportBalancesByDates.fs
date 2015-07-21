@@ -96,35 +96,6 @@ let accountBalancesByDateReport (input: InputFile) (dates: Date list)  =
              (addLine "Liabilities" datedAccounts dates
              (addLine "Equity" datedAccounts dates [])))))}
 
-
-
-
-
-(* XXX - up to here - finish below *)
-(*
-(* scrap code *)
-(printReport (accountBalancesByDateReport input dates))
-let dates = ["2013-01-05";"2013-01-15"]
-let accountsByDate = (accountsByDate input dates)
-
-let latestAccounts = accountsByDate.["2013-01-15"]
-let latestExpenseAccount = match accountsByDate.["2013-01-15"].find("expenses") with
-                           | Some a -> a
-                           | None -> failwith "disaster"
-let latestAssetAccount = match accountsByDate.["2013-01-15"].find("assets") with
-                           | Some a -> a
-                           | None -> failwith "disaster"
-(constructReportBalancesByDateLine [accountsByDate.["2013-01-05"].find("expenses");accountsByDate.["2013-01-15"].find("expenses")]
-    (constructAccountNameTree latestExpenseAccount "EXPENSES"))
-(constructReportBalancesByDateLine [accountsByDate.["2013-01-05"].find("assets");accountsByDate.["2013-01-15"].find("assets")]
-    (constructAccountNameTree latestAssetAccount "assets"))
-
-(addLine "EXPENSE" accountsByDate dates [])
-
-(* scrap code above here *)
-
-*)
-    
 let rec printReportLine indent (line : ReportBalancesByDateLine) =
     for balance in line.amounts.balances do    
         printf "%s\t" (Text.fmt balance)

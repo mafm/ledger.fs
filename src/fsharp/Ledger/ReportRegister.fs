@@ -9,6 +9,8 @@ open Calculations
 open InputTypes
 open InternalTypes
 open Misc
+open ReportFormatting
+
 open PersistentCollections
 
 type RegisterReportLine = {date: Date
@@ -61,20 +63,25 @@ let registerReport (input: InputFile) (account: AccountName) =
      lines = (List.ofSeq lines)}
 
 let printRegisterReportLine line =
-    printf "Date: %s " line.date
-    printf "Amount: %A " line.amount
-    printf "Balance: %A " line.balance
-    printf "Account: %s " line.account
-    printf "Description: %s\n" line.description
+    printf "%s\t" line.date
+    printf "%s\t" (Text.fmt line.amount)
+    printf "%s\t" (Text.fmt line.balance)
+    printf "%s\t" line.account
+    printf "%s\n" line.description
 
 let printRegisterReport report =
-    printf "Account: %s " report.account
+    printf "Account: %s\n" report.account
     match report.from with
-    | Some date -> printf "From: %s " date
+    | Some date -> printf "From: %s\n" date
     | None -> ()
     match report.until with
-    | Some date -> printf "Until: %s " date
+    | Some date -> printf "Until: %s\n" date
     | None -> ()
+    printf "Date\t"
+    printf "Amount\t"
+    printf "Balance\t"
+    printf "Account\t"
+    printf "Description\n"
     printf "\n"
     for line in report.lines do
         printRegisterReportLine line

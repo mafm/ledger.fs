@@ -61,10 +61,10 @@
     <Compile Include="InternalTypes.fs" />
     <Compile Include="InternalTypesTest.fs" />
     <Compile Include="Calculations.fs" />
+    <Compile Include="ReportFormatting.fs" />
     <Compile Include="ReportRegister.fs" />
     <Compile Include="RegisterReportTest.fs" />
     <Compile Include="ReportBalances.fs" />
-    <Compile Include="ReportFormatting.fs" />
     <Compile Include="ReportBalancesByDates.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />

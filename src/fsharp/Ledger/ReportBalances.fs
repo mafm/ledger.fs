@@ -9,6 +9,7 @@ open Calculations
 open InputTypes
 open InternalTypes
 open Misc
+open ReportFormatting
 open PersistentCollections
 
 type BalanceReportLine = { account: AccountName
@@ -42,7 +43,7 @@ let balanceReport (input: InputFile) =
              (addLine "Equity" [])))))}
     
 let rec printBalanceReportLine indent (line : BalanceReportLine) =    
-    printf "%A\t" line.balance     
+    printf "%s\t" (Text.fmt line.balance)
     for i in 1 .. indent do
         printf " "
     printf "%s\n" line.account

@@ -18,7 +18,7 @@ type Text =
     static member fmt (x: Amount) =    
         match x with
         | AUD 0 -> "-"            
-        | AUD x -> (sprintf "$%.2f" ((float x) * 0.01))
+        | AUD x -> System.String.Format("${0:n}",((float x) * 0.01))
     // XXX/TODO: The fmtXyz methods have unique names, because the
     // argument types to each are identical as far as the compiler
     // is concerned, so we use method name to disambiguate.
