@@ -27,19 +27,7 @@ type ReportBalancesByDate = {dates: Date list
 
 type DatedAccounts = PersistentDictionary<Date, Accounts>
 
-// Construct map where keys are the given dates and values are the "Accounts" at that date.
-let accountsByDate (input: InputFile) (dates: Date list) =    
-    let rec helper (accounts: Accounts) (dates : Date list) (transactions: Transaction list) (soFar:PersistentDictionary<Date,Accounts>) =
-        match dates with
-        | [] -> soFar
-        | date::dates ->            
-            let accountsAtDate = (accounts.Book (List.filter (fun (t:Transaction) -> t.date <= date) transactions))
-            let soFar = soFar.Add(date, accountsAtDate)
-            (helper accountsAtDate
-                    dates
-                    (List.filter (fun (t:Transaction) -> t.date > date) transactions)
-                    soFar)    
-    (helper (new Accounts()) (List.sort dates) (transactions input) PersistentDictionary.Empty)
+
 
 /// Can't I do this without a helper function?
 let extractBalance (a: Account option) =

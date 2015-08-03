@@ -14,7 +14,7 @@
 **** DONE Need to ensure account names are valid
      Do this before checking transactions balance - we need valid
      names to actually calculate the balance.
-**** Need to make balance-verify statements work!
+**** DONE Need to make balance-verify statements work!
 **** Convert whitespace in descriptions to space characters
 *** Command-line arguments
 **** date arguments need to be checked for validity

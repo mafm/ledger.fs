@@ -36,8 +36,6 @@ let fatal message =
     printfn "Fatal error: %s" message
     // XXX/TODO: Should generally not delay, unless we know this was started outside
     //           of a shell window - which should not usually be the case.
-    printfn "Pausing for 60s to allow you to read this message."
-    System.Threading.Thread.Sleep(60 * 1000)
     System.Environment.Exit 1
 
 let nonFatal message =
@@ -60,11 +58,32 @@ let validateAccountNames (transactions: Transaction List) =
     if not allOk then
         (fatal "Error in input file - invalid account name(s).")
 
-/// XXX: To validate input file we need to (at least) check:
-///      - transactions are in date order
-///      - transactions balance
-///      - all account names in transactions are valid.
-///      - all balance-verification assertions are true.
+let validateBalanceAssertions input =
+    let mutable allOk = true
+    let assertions = (balanceVerifications input)
+    let dates = (List.ofSeq (Seq.sort (Set.ofSeq [for a in assertions -> a.date])))
+    let accountsByDate = (accountsByDate input dates) in
+        for assertion in assertions do
+            if not (validAccountName assertion.account) then
+                (nonFatal (sprintf "Error in verify-balance dated %s - invalid account '%s'." assertion.date assertion.account))
+                allOk <- false
+            else
+                match accountsByDate.[assertion.date].find(assertion.account) with
+                | None ->
+                        (nonFatal (sprintf "Error in verify-balance. Account '%s' has no bookings at date %s."
+                                                    assertion.account assertion.date))
+                        allOk <- false
+                | Some account ->
+                       if account.balance <> assertion.amount then
+                            (nonFatal (sprintf "Error in verify-balance. Expected balance of '%s' at %s: %s actual balance: %s"
+                                            assertion.account
+                                            assertion.date
+                                            (Text.fmt assertion.amount)
+                                            (Text.fmt account.balance)))
+                            allOk <- false
+            if not allOk then
+                (fatal "Error in input file - incorrect verify-balance assertion(s).")
+
 let validate (input: InputFile) =
     let transactions = (transactions input)
     (validateAccountNames transactions)
@@ -84,6 +103,7 @@ let validate (input: InputFile) =
                 (nonFatal (sprintf "Imbalance of %s in transaction dated %s (%s).\n"
                                 (Text.fmt (absAmount (balance t))) t.date t.description))
                 (fatal "Error in input file - unbalanced transactions.")
+    (validateBalanceAssertions input)
 
 let demo () =
     try

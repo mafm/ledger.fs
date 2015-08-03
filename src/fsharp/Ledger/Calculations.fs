@@ -3,6 +3,7 @@
 open InputTypes
 open InternalTypes
 open Misc
+open PersistentCollections
 
 /// Extract Transaction items
 let transactions inputs =
@@ -11,38 +12,38 @@ let transactions inputs =
         | (Transaction t) :: tail -> helper tail (t :: soFar)
         | (BalanceVerfication _) :: tail -> helper tail soFar
         | (BlankLine :: tail) -> helper tail soFar
-        | (Comment _) :: tail -> helper tail soFar    
+        | (Comment _) :: tail -> helper tail soFar
         | [] -> soFar
     List.rev (helper inputs [])
 
-/// Extract BalanceVerfication items    
+/// Extract BalanceVerfication items
 let balanceVerifications inputs =
     let rec helper items soFar =
         match items with
         | (BalanceVerfication b) :: tail -> helper tail (b :: soFar)
-        | (Transaction _) :: tail -> helper tail soFar       
+        | (Transaction _) :: tail -> helper tail soFar
         | (BlankLine :: tail) -> helper tail soFar
-        | (Comment _) :: tail -> helper tail soFar    
+        | (Comment _) :: tail -> helper tail soFar
         | [] -> soFar
     List.rev (helper inputs [])
 
 type DateOrderCheck =
-    | OK 
+    | OK
     | Problem of previous: Transaction * next: Transaction
 
 /// Check transactions are in date order. Give two problem transactions if not.
 let checkDateOrder (transactions : Transaction list) =
     let rec helper (previous : Transaction) (transactions : Transaction list) =
-        match transactions with 
+        match transactions with
             | [] -> DateOrderCheck.OK
-            | (t :: tail) -> 
+            | (t :: tail) ->
                 if t.date < previous.date then
                     DateOrderCheck.Problem(previous, t)
                 else
-                    (helper t tail)                                                
+                    (helper t tail)
     match transactions with
         | [] -> DateOrderCheck.OK
-        | (t :: tail) -> (helper t tail)            
+        | (t :: tail) -> (helper t tail)
 
 /// Is transaction unbalanced?
 let balance (t:Transaction) =
@@ -104,6 +105,20 @@ let rec constructAccountNameTree (a: Account) (canonicalName: string) =
                           subAccountChildren)
         | _ -> Node([{canonical = canonicalName; input = a.name}],
                     [for (subAccount, cName) in subAccountsWithCNames -> (constructAccountNameTree subAccount cName)])
+
+// Construct map where keys are the given dates and values are the "Accounts" at that date.
+let accountsByDate (input: InputFile) (dates: Date list) =
+    let rec helper (accounts: Accounts) (dates : Date list) (transactions: Transaction list) (soFar:PersistentDictionary<Date,Accounts>) =
+        match dates with
+        | [] -> soFar
+        | date::dates ->
+            let accountsAtDate = (accounts.Book (List.filter (fun (t:Transaction) -> t.date <= date) transactions))
+            let soFar = soFar.Add(date, accountsAtDate)
+            (helper accountsAtDate
+                    dates
+                    (List.filter (fun (t:Transaction) -> t.date > date) transactions)
+                    soFar)
+    (helper (new Accounts()) (List.sort dates) (transactions input) PersistentDictionary.Empty)
 
 (* XXX: When I add tests for this module, want to ensure that on the account tree constructed from
    the sample transactions we get the following result:
