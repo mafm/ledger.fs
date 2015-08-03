@@ -49,6 +49,17 @@ let parseInputFile filename =
         | ParseSuccess items -> items
         | ParseError message -> raise (UnableToParseFile(filename, message))
 
+let validateAccountNames (transactions: Transaction List) =
+    let mutable allOk = true
+    for t in transactions do
+        for p in t.postings do
+            if not (validAccountName p.account) then
+                (nonFatal (sprintf "Invalid account name '%s' in transaction dated %s (%s)."
+                                p.account t.date t.description))
+                allOk <- false
+    if not allOk then
+        (fatal "Error in input file - invalid account name(s).")
+
 /// XXX: To validate input file we need to (at least) check:
 ///      - transactions are in date order
 ///      - transactions balance
@@ -56,6 +67,7 @@ let parseInputFile filename =
 ///      - all balance-verification assertions are true.
 let validate (input: InputFile) =
     let transactions = (transactions input)
+    (validateAccountNames transactions)
     match checkDateOrder transactions with
             | OK -> ()
             | Problem(prev, next) ->

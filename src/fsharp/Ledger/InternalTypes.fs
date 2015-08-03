@@ -41,6 +41,12 @@ let accountType (name : AccountName) =
     | "EQUITY"      -> Equity
     | _             -> raise (BadAccountName(name, "Unable to determine account type"))
 
+/// Do we have a valid account name?
+let validAccountName (a:AccountName) =
+    try
+        match (accountType a) with _ -> true
+    with BadAccountName(name, problem) -> false
+
 let canonicalRootName name =
     let accountType = accountType name
     match accountType with
