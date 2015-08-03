@@ -44,6 +44,15 @@ let checkDateOrder (transactions : Transaction list) =
         | [] -> DateOrderCheck.OK
         | (t :: tail) -> (helper t tail)            
 
+/// Is transaction unbalanced?
+let balance (t:Transaction) =
+    let signedAmount (p: Posting) =
+        (multAmount (sign (accountType p.account)) p.amount)
+    (List.reduce addAmounts (List.map signedAmount t.postings))
+
+let unbalanced (t:Transaction) =
+    (balance t) <> zeroAmount
+
 /// Filter transactions by optional (inclusive) dates.
 let filter (transactions : Transaction list) (first : Date option) (last : Date option) =
     let transactions = match first with

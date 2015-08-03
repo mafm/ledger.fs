@@ -10,7 +10,7 @@
 * Enhancements
 ** Validation
 *** input/transaction files
-**** Need to make sure transactions at least balance!
+**** DONE Need to make sure transactions at least balance!
 **** Need to make balance-verify statements work!
 **** Convert whitespace in descriptions to space characters
 *** Command-line arguments

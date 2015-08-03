@@ -50,11 +50,7 @@ let canonicalRootName name =
     | Expense -> "EXPENSE"
     | Equity -> "EQUITY"
 
-/// Add two amounts
-let addAmounts (a: Amount) (b: Amount) =
-   match a with
-    | AUD a -> match b with
-                | AUD b -> AUD (a+b)
+
 
 type AccountNameComponent = {
     canonical: string;

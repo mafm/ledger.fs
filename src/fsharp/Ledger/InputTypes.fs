@@ -17,6 +17,19 @@ type Amount =
 
 let zeroAmount = AUD 0
 
+/// Add two amounts
+let addAmounts (a: Amount) (b: Amount) =
+   match (a, b) with
+    | (AUD a, AUD b) -> AUD (a+b)
+
+let multAmount (i: int) (a: Amount) =
+    match a with
+    | AUD a -> AUD (i * a)
+
+let absAmount (a: Amount) =
+    match a with
+    | AUD a -> AUD (abs a)
+
 type Posting = { account: AccountName
                  amount:  Amount}               
 

@@ -28,9 +28,9 @@ open InternalTypes
 open Misc
 open ReportRegister
 open ReportBalances
+open ReportFormatting
 
 exception UnableToParseFile of filename: string * message: string
-
 
 let fatal message =
     printfn "Fatal error: %s" message
@@ -39,6 +39,9 @@ let fatal message =
     printfn "Pausing for 60s to allow you to read this message."
     System.Threading.Thread.Sleep(60 * 1000)
     System.Environment.Exit 1
+
+let nonFatal message =
+    printfn "error: %s" message
 
 let parseInputFile filename =
     let parseResult = Parse.readInputFile filename
@@ -52,7 +55,8 @@ let parseInputFile filename =
 ///      - all account names in transactions are valid.
 ///      - all balance-verification assertions are true.
 let validate (input: InputFile) =
-    match checkDateOrder (transactions input) with
+    let transactions = (transactions input)
+    match checkDateOrder transactions with
             | OK -> ()
             | Problem(prev, next) ->
                 fatal (sprintf "Transactions not in date order.\n\
@@ -61,6 +65,14 @@ let validate (input: InputFile) =
                                 after transaction dated %s\n\
                                 \t%s"
                                next.date next.description prev.date prev.description)
+    match (List.filter unbalanced transactions) with
+        | [] -> ()
+        | unbalanced ->
+            for t in unbalanced do
+                (nonFatal (sprintf "Imbalance of %s in transaction dated %s (%s).\n"
+                                (Text.fmt (absAmount (balance t))) t.date t.description))
+                (fatal "Error in input file - unbalanced transactions.")
+
 let demo () =
     try
         let timer = new System.Diagnostics.Stopwatch()
