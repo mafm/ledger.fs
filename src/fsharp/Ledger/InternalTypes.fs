@@ -126,7 +126,7 @@ type Account = struct
                                        postings = postings;
                                        balance = balance}
       new (fullName: string) =
-        let name = match (fullName.ToUpper().Split(':') |> Array.toList |> List.rev) with
+        let name = match (fullName.Split(':') |> Array.toList |> List.rev) with
                     | name :: _ -> name
                     | [] -> raise (BadAccountName(fullName, "Empty name"))
         let sign = sign (accountType fullName)
