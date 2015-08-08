@@ -134,34 +134,41 @@ let demo () =
 let usage = """Ledger.fs: simple command-line double-entry accounting.
 
             Usage:
-            Ledger.fs <input-filename> running-balance <account>
-            Ledger.fs <input-filename> balances
-            Ledger.fs <input-filename> balances-by-date <date>...
-
+            Ledger.fs <input-filename> [--excel-output=<filename>] running-balance <account>
+            Ledger.fs <input-filename> [--excel-output=<filename>] balances
+            Ledger.fs <input-filename> [--excel-output=<filename>] balances-by-date <date>...
 
             Options:
-            -h --help     Show this help."""
+            -h --help                   Show this help.
+            --excel-output=<filename>   Generate Excel-readable report."""
 
 [<EntryPoint>]
 let main argv =
     let arguments = DocoptNet.Docopt().Apply(usage, argv, exit=true)
     let inputFileName = (string arguments.["<input-filename>"])
+    let excelOutputFilename =
+        match (string arguments.["--excel-output"]) with
+           | "" -> ""
+           | arg -> if arg.EndsWith(".xlsx") then arg else (arg + ".xlsx")
     let input = (parseInputFile inputFileName)
     (validate input)
 
     if (arguments.["running-balance"].IsTrue) then
-        (printRegisterReport (registerReport input (string arguments.["<account>"])))
+        let report = (registerReport input (string arguments.["<account>"]))
+        (printRegisterReport report)
+        if excelOutputFilename <> "" then
+                ExcelOutput.Excel.write(report, excelOutputFilename)
 
     if (arguments.["balances"].IsTrue) then
         (printBalanceReport (balanceReport input))
 
     if (arguments.["balances-by-date"].IsTrue) then
-                //printf "dates: '%s'"  arguments.["<date>"].AsList()
-        (ReportBalancesByDate.printReport
-            (ReportBalancesByDate.accountBalancesByDateReport input
-            [for d in arguments.["<date>"].AsList -> (string d)]))
+        let report = (ReportBalancesByDate.accountBalancesByDateReport input
+                                                                       [for d in arguments.["<date>"].AsList -> (string d)])
 
-
+        (ReportBalancesByDate.printReport report)
+        if excelOutputFilename <> "" then
+                ExcelOutput.Excel.write(report, excelOutputFilename)
 
     //demo()
     //printfn "%A" argv

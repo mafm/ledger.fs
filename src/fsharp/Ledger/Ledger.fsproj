@@ -67,6 +67,7 @@
     <Compile Include="RegisterReportTest.fs" />
     <Compile Include="ReportBalances.fs" />
     <Compile Include="ReportBalancesByDates.fs" />
+    <Compile Include="ExcelOutput.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
@@ -74,6 +75,10 @@
   <ItemGroup>
     <Reference Include="DocoptNet">
       <HintPath>packages\docopt.net.0.6.1.6\lib\net40\DocoptNet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EPPlus">
+      <HintPath>packages\EPPlus.4.0.4\lib\net20\EPPlus.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FParsec">
