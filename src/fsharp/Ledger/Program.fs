@@ -160,11 +160,15 @@ let main argv =
                 ExcelOutput.Excel.write(report, excelOutputFilename)
 
     if (arguments.["balances"].IsTrue) then
-        (printBalanceReport (balanceReport input))
+      let report = (balanceReport input)
+      (printBalanceReport report)
+      if excelOutputFilename <> "" then
+        ExcelOutput.Excel.write(report, excelOutputFilename)
 
     if (arguments.["balances-by-date"].IsTrue) then
-        let report = (ReportBalancesByDate.accountBalancesByDateReport input
-                                                                       [for d in arguments.["<date>"].AsList -> (string d)])
+        let report = (ReportBalancesByDate.accountBalancesByDateReport
+                        input
+                        [for d in arguments.["<date>"].AsList -> (string d)])
 
         (ReportBalancesByDate.printReport report)
         if excelOutputFilename <> "" then

@@ -1,10 +1,19 @@
+* ASAP
+** Add transactions to reports:
+   Both these need to have txnid/description on them.
+*** balances report (excel)
+*** balances-by-date report (excel)
+
+** Add a transaction report:
+   with transaction#/date/desc with amount/account children
+
 * Bugs
 ** DONE Accounts reported with "canonical", not "input" names
 
    When we process a set of transactions, top-level Accounts structure get
    created with wrong ".input" field - they get the account's canonical name,
    not it's "input" name.
-  
+
    Hmmm ... This is problem in balances-by-date report, but not in balances report....
 
 * Enhancements
@@ -20,7 +29,7 @@
 **** date arguments need to be checked for validity
 **** date arguments need to be sorted into ascending order
 **** account arguments need to be checked for validity
-     
+
 ** Better exception handling
    At the moment, we don't even handle missing input file exceptions.
 ** Reporting
@@ -33,16 +42,15 @@
 *** Excel-formatted output
 *** text-formatted
 **** Justify columns
-     appropriately when producing (default) text-formatted reports.       
+     appropriately when producing (default) text-formatted reports.
 
 ** Multi-currency
 ** Multiple entities
    Handle multiple entities in a single transaction file.
-** Also - all the XXX & TODO comments throughout the code.   
+** Also - all the XXX & TODO comments throughout the code.
 ** Non-empty list type
    Where we raise exceptions for empty lists - we could structure the
    list type so its non-empty - in particular with
    accountNameComponents. A generic non-empty list type type might
    avoid a bit of exception raising code that theoretically can't be
    thrown anyway.
-   

@@ -61,7 +61,13 @@ type Excel =
             column <- column + 1
         column <- column + 1
         Excel.setValue (ws.Cells.[nextRow, column+indent], line.account)
-        Excel.writeLines (line.subAccounts, ws, indent+1, nextRow+1)
+        if indent <> 0 then
+            ws.Row(nextRow).OutlineLevel <- (indent)
+        let rowAfterChildren = Excel.writeLines (line.subAccounts, ws, indent+1, nextRow+1)
+        if rowAfterChildren <> nextRow then
+            ws.Row(nextRow).Collapsed <- true
+        rowAfterChildren
+
 
     static member writeLines((lines : ReportBalancesByDate.ReportBalancesByDateLine list), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
         match lines with
@@ -73,7 +79,6 @@ type Excel =
         let package = new ExcelPackage(file)
         let worksheet = package.Workbook.Worksheets.Add("Balances by Date")
         let numDates = report.dates.Length
-        printf "nd:%d" numDates
         if numDates > 0 then
             (setHeader worksheet.Cells.[1, 1] "Balance")
             for i in 1 .. numDates do
@@ -84,4 +89,37 @@ type Excel =
             (setHeader worksheet.Cells.[2, numDates*2+2] "Account")
             Excel.writeLines(report.lines, worksheet, 0, 3) |> ignore
         worksheet.View.FreezePanes(3, 1)
+        worksheet.OutLineSummaryBelow <- false
+        package.Save()
+
+    static member writeLine((line: ReportBalances.BalanceReportLine),
+                            (ws : ExcelWorksheet),
+                            (indent: int),
+                            (nextRow: int)) =
+      (Excel.setValue (ws.Cells.[nextRow, 1], line.balance))
+      Excel.setValue (ws.Cells.[nextRow, 2+indent], line.account)
+      if indent <> 0 then
+        ws.Row(nextRow).OutlineLevel <- (indent)
+      let rowAfterChildren = Excel.writeLines (line.subAccounts, ws, indent+1, nextRow+1)
+      if rowAfterChildren <> nextRow then
+        ws.Row(nextRow).Collapsed <- true
+      rowAfterChildren
+
+    static member writeLines((lines : ReportBalances.BalanceReportLine list),
+                             (ws : ExcelWorksheet),
+                             (indent: int),
+                             (nextRow: int)) =
+        match lines with
+            | [] -> nextRow
+            | first::rest -> Excel.writeLines(rest, ws, indent, Excel.writeLine(first, ws, indent, nextRow))
+
+    static member write((report : ReportBalances.BalanceReport), (filename : string)) =
+        let file = newFile (filename)
+        let package = new ExcelPackage(file)
+        let worksheet = package.Workbook.Worksheets.Add("Balances")
+        (setHeader worksheet.Cells.[1, 1] "Balance")
+        (setHeader worksheet.Cells.[1, 2] "Account")
+        Excel.writeLines(report.lines, worksheet, 0, 2) |> ignore
+        worksheet.View.FreezePanes(2, 1)
+        worksheet.OutLineSummaryBelow <- false
         package.Save()
