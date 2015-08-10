@@ -1,7 +1,7 @@
 ﻿module ExcelOutput
 
 open InputTypes
-open ReportFormatting
+open TextOutput
 open OfficeOpenXml
 
 let newFile (filename:string) =
@@ -27,7 +27,7 @@ type Excel =
             cell.Value <- (0.01 * (float a))
             cell.Style.Numberformat.Format <- "\"$\"#,##0.00;[Red]\"$\"#,##0.00"
 
-    static member write((report : ReportRegister.RegisterReport), (filename : string)) =
+    static member write((report : ReportRegister.Report), (filename : string)) =
         let file = newFile (filename)
         let package = new ExcelPackage(file)
         let worksheet = package.Workbook.Worksheets.Add("Running Balance - " + report.account)
@@ -91,7 +91,7 @@ type Excel =
         worksheet.OutLineSummaryBelow <- false
         package.Save()
 
-    static member writeLine((line: ReportBalances.BalanceReportLine),
+    static member writeLine((line: ReportBalances.Line),
                             (ws : ExcelWorksheet),
                             (indent: int),
                             (nextRow: int)) =
@@ -104,7 +104,7 @@ type Excel =
         ws.Row(nextRow).Collapsed <- true
       rowAfterChildren
 
-    static member writeLines((lines : ReportBalances.BalanceReportLine list),
+    static member writeLines((lines : ReportBalances.Line list),
                              (ws : ExcelWorksheet),
                              (indent: int),
                              (nextRow: int)) =
@@ -112,7 +112,7 @@ type Excel =
             | [] -> nextRow
             | first::rest -> Excel.writeLines(rest, ws, indent, Excel.writeLine(first, ws, indent, nextRow))
 
-    static member write((report : ReportBalances.BalanceReport), (filename : string)) =
+    static member write((report : ReportBalances.Report), (filename : string)) =
         let file = newFile (filename)
         let package = new ExcelPackage(file)
         let worksheet = package.Workbook.Worksheets.Add("Balances")

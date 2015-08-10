@@ -9,14 +9,15 @@ open Calculations
 open InputTypes
 open InternalTypes
 open Misc
-open ReportFormatting
+open TextOutput
 open PersistentCollections
 
-type BalanceReportLine = { account: AccountName
-                           balance: Amount
-                           subAccounts: BalanceReportLine list}
+type Line = 
+    { account : AccountName
+      balance : Amount
+      subAccounts : Line list }
 
-type BalanceReport = {lines: BalanceReportLine list}
+type Report = {lines: Line list}
 
 let rec accountBalanceReport (name:string)  (a: Account) =
     let subAccounts = [for KeyValue(name, account) in (a.subAccounts|>Seq.sortBy (fun (KeyValue(k,v)) -> k) ) -> account]
@@ -42,7 +43,7 @@ let generateReport (input: InputFile) =
              (addLine "Expenses"
              (addLine "Equity" [])))))}
 
-let rec printBalanceReportLine indent (line : BalanceReportLine) =
+let rec printBalanceReportLine indent (line : Line) =
     printf "%s\t" (Text.fmt line.balance)
     for i in 1 .. indent do
         printf " "

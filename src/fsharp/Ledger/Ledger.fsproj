@@ -62,7 +62,7 @@
     <Compile Include="InternalTypes.fs" />
     <Compile Include="InternalTypesTest.fs" />
     <Compile Include="Calculations.fs" />
-    <Compile Include="ReportFormatting.fs" />
+    <Compile Include="TextOutput.fs" />
     <Compile Include="ReportRegister.fs" />
     <Compile Include="RegisterReportTest.fs" />
     <Compile Include="ReportBalances.fs" />

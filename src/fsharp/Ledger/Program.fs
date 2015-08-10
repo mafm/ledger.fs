@@ -26,7 +26,7 @@ open Calculations
 open InputTypes
 open InternalTypes
 open Misc
-open ReportFormatting
+open TextOutput
 
 exception UnableToParseFile of filename: string * message: string
 
@@ -170,6 +170,7 @@ let main argv =
         (ReportBalancesByDate.printReport report)
         if excelOutputFilename <> "" then
                 ExcelOutput.Excel.write(report, excelOutputFilename)
+
     if (arguments.["chart-of-accounts"].IsTrue) then
         let report = (ReportChartOfAccounts.generateReport input)
         (ReportChartOfAccounts.printReport report)

@@ -7,7 +7,7 @@ open Calculations
 open InputTypes
 open InternalTypes
 open Misc
-open ReportFormatting
+open TextOutput
 open PersistentCollections
 
 type Line = { account: AccountName     

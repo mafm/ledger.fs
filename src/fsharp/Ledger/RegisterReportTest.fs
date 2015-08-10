@@ -44,7 +44,7 @@ type ``Test Register Report`` () =
                      BalanceVerfication {date = "2013-02-01";
                                          account = "Assets:Bankwest:Cheque";
                                          amount = AUD 62105;}]
-        let expected = {RegisterReport.account = "Expenses";
+        let expected = {Report.account = "Expenses";
                         from = None;
                         until = None;
                         lines = [{date = "2013-01-05";
