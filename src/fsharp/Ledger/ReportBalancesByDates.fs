@@ -75,7 +75,7 @@ let addLine (name: AccountName) (accounts: DatedAccounts) (dates: Date list) lin
                                 :: linesSoFar)
         | None -> linesSoFar
 
-let accountBalancesByDateReport (input: InputFile) (dates: Date list)  =
+let generateReport (input: InputFile) (dates: Date list)  =
     let datedAccounts = (accountsByDate input dates)
     {dates = dates;
      lines = (addLine "Assets" datedAccounts dates

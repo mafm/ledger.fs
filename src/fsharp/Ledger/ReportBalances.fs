@@ -24,25 +24,25 @@ let rec accountBalanceReport (name:string)  (a: Account) =
     // If an account has no postings of its own and exactly one sub-account, we treat that subaccount as the
     // account. This produces much neater reports - if you like the text reports.
     match subAccounts with
-    | [(onlyChild)] when (a.postings = onlyChild.postings) 
-        -> (accountBalanceReport (name + ":" + onlyChild.name) onlyChild)    
+    | [(onlyChild)] when (a.postings = onlyChild.postings)
+        -> (accountBalanceReport (name + ":" + onlyChild.name) onlyChild)
     | _ -> { account = name;
              balance = a.balance;
              subAccounts = [for account in subAccounts -> (accountBalanceReport account.name account)]}
 
-let balanceReport (input: InputFile) =    
+let generateReport (input: InputFile) =
     let accounts = Accounts(transactions input)
     let addLine (account:AccountName) lines =
         match (accounts.find account) with
         | None -> lines
-        | Some a -> (accountBalanceReport a.fullName a)::lines    
+        | Some a -> (accountBalanceReport a.fullName a)::lines
     {lines = (addLine "Assets"
              (addLine "Liabilities"
              (addLine "Income"
              (addLine "Expenses"
              (addLine "Equity" [])))))}
-    
-let rec printBalanceReportLine indent (line : BalanceReportLine) =    
+
+let rec printBalanceReportLine indent (line : BalanceReportLine) =
     printf "%s\t" (Text.fmt line.balance)
     for i in 1 .. indent do
         printf " "

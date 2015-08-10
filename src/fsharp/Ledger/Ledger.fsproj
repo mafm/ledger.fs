@@ -67,6 +67,7 @@
     <Compile Include="RegisterReportTest.fs" />
     <Compile Include="ReportBalances.fs" />
     <Compile Include="ReportBalancesByDates.fs" />
+    <Compile Include="ReportChartOfAccounts.fs" />
     <Compile Include="ExcelOutput.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />

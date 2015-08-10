@@ -68,7 +68,6 @@ type Excel =
             ws.Row(nextRow).Collapsed <- true
         rowAfterChildren
 
-
     static member writeLines((lines : ReportBalancesByDate.ReportBalancesByDateLine list), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
         match lines with
             | [] -> nextRow
@@ -119,6 +118,35 @@ type Excel =
         let worksheet = package.Workbook.Worksheets.Add("Balances")
         (setHeader worksheet.Cells.[1, 1] "Balance")
         (setHeader worksheet.Cells.[1, 2] "Account")
+        Excel.writeLines(report.lines, worksheet, 0, 2) |> ignore
+        worksheet.View.FreezePanes(2, 1)
+        worksheet.OutLineSummaryBelow <- false
+        package.Save()
+
+    static member writeLine((line: ReportChartOfAccounts.Line),
+                            (ws : ExcelWorksheet),
+                            (indent: int),
+                            (nextRow: int)) =
+      Excel.setValue (ws.Cells.[nextRow, 2+indent], line.account)
+      if indent <> 0 then
+        ws.Row(nextRow).OutlineLevel <- (indent)
+      // Deliberately avoid collapsing hierarchy. If we're looking, we probably want to
+      // emphasise details, and it's easy to manually hide them if that's what is wanted.
+      Excel.writeLines (line.subAccounts, ws, indent+1, nextRow+1)
+
+    static member writeLines((lines : ReportChartOfAccounts.Line list),
+                             (ws : ExcelWorksheet),
+                             (indent: int),
+                             (nextRow: int)) =
+        match lines with
+            | [] -> nextRow
+            | first::rest -> Excel.writeLines(rest, ws, indent, Excel.writeLine(first, ws, indent, nextRow))
+
+    static member write((report : ReportChartOfAccounts.Report), (filename : string)) =
+        let file = newFile (filename)
+        let package = new ExcelPackage(file)
+        let worksheet = package.Workbook.Worksheets.Add("Chart Of Accounts")
+        (setHeader worksheet.Cells.[1, 1] "Account")
         Excel.writeLines(report.lines, worksheet, 0, 2) |> ignore
         worksheet.View.FreezePanes(2, 1)
         worksheet.OutLineSummaryBelow <- false

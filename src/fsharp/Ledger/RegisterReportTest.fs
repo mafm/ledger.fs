@@ -25,7 +25,7 @@ type ``Test Register Report`` () =
                                   postings = [{account = "Expenses:Food:Groceries";
                                                amount = AUD 9853;};
                                               {account = "Assets:Bankwest:Cheque";
-                                               amount = AUD -9853;}];}; 
+                                               amount = AUD -9853;}];};
                      BlankLine;
                      Transaction {date = "2013-01-10";
                                   description = "I bought some petrol, and paid using a credit card.";
@@ -56,11 +56,10 @@ type ``Test Register Report`` () =
                                   amount = AUD 5801;
                                   description = "I bought some petrol, and paid using a credit card.";
                                   account = "Expenses:Motor:Fuel";
-                                  balance = AUD 15654;}; 
+                                  balance = AUD 15654;};
                                  {date = "2013-01-15";
                                   amount = AUD 28042;
                                   description = "I paid my electricity bill.";
                                   account = "Expenses:Electricity";
                                   balance = AUD 43696;}];}
-        (registerReport input "Expenses") |> should equal expected
-    
+        (generateReport input "Expenses") |> should equal expected

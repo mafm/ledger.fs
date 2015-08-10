@@ -55,7 +55,7 @@ let rec helpTransactions (t: Transaction list) (account:AccountName) openingBala
     | t::rest -> let (newLines, newBalance) = helpTransaction t account openingBalance linesSoFar in
                  helpTransactions rest account newBalance newLines
 
-let registerReport (input: InputFile) (account: AccountName) =
+let generateReport (input: InputFile) (account: AccountName) =
     let (lines, finalBalance) = helpTransactions (transactions input) account zeroAmount PersistentQueue.Empty
     {account = account;
      from = None;

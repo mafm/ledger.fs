@@ -26,8 +26,6 @@ open Calculations
 open InputTypes
 open InternalTypes
 open Misc
-open ReportRegister
-open ReportBalances
 open ReportFormatting
 
 exception UnableToParseFile of filename: string * message: string
@@ -111,19 +109,19 @@ let demo () =
         let input = parseInputFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
             (validate input)
             printfn "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
-            let report = (registerReport input "Expenses") in do
+            let report = (ReportRegister.generateReport input "Expenses") in do
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
                 (printf "\nDEMO: EXPENSES REGISTER\n")
-                (printRegisterReport report)
+                (ReportRegister.printRegisterReport report)
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
                 (printf "\nDEMO: ALL BALANCES\n")
-                let report = (balanceReport input) in do
+                let report = (ReportBalances.generateReport input) in do
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
-                (printBalanceReport report)
+                (ReportBalances.printBalanceReport report)
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
                 (printf "\nDEMO: BALANCES BY DATE\n")
                 let dates = ["2013-01-05";"2013-01-15"]
-                let report = (ReportBalancesByDate.accountBalancesByDateReport input dates) in do
+                let report = (ReportBalancesByDate.generateReport input dates) in do
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
                 (ReportBalancesByDate.printReport report)
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
@@ -137,6 +135,7 @@ let usage = """Ledger.fs: simple command-line double-entry accounting.
             Ledger.fs <input-filename> [--excel-output=<filename>] running-balance <account>
             Ledger.fs <input-filename> [--excel-output=<filename>] balances
             Ledger.fs <input-filename> [--excel-output=<filename>] balances-by-date <date>...
+            Ledger.fs <input-filename> [--excel-output=<filename>] chart-of-accounts
 
             Options:
             -h --help                   Show this help.
@@ -150,29 +149,32 @@ let main argv =
         match (string arguments.["--excel-output"]) with
            | "" -> ""
            | arg -> if arg.EndsWith(".xlsx") then arg else (arg + ".xlsx")
+    let dates = ([for d in arguments.["<date>"].AsList -> (string d)] |> List.sort)
     let input = (parseInputFile inputFileName)
     (validate input)
 
     if (arguments.["running-balance"].IsTrue) then
-        let report = (registerReport input (string arguments.["<account>"]))
-        (printRegisterReport report)
+        let report = (ReportRegister.generateReport input (string arguments.["<account>"]))
+        (ReportRegister.printRegisterReport report)
         if excelOutputFilename <> "" then
                 ExcelOutput.Excel.write(report, excelOutputFilename)
 
     if (arguments.["balances"].IsTrue) then
-      let report = (balanceReport input)
-      (printBalanceReport report)
+      let report = (ReportBalances.generateReport input)
+      (ReportBalances.printBalanceReport report)
       if excelOutputFilename <> "" then
         ExcelOutput.Excel.write(report, excelOutputFilename)
 
     if (arguments.["balances-by-date"].IsTrue) then
-        let report = (ReportBalancesByDate.accountBalancesByDateReport
-                        input
-                        [for d in arguments.["<date>"].AsList -> (string d)])
-
+        let report = (ReportBalancesByDate.generateReport input dates)
         (ReportBalancesByDate.printReport report)
         if excelOutputFilename <> "" then
                 ExcelOutput.Excel.write(report, excelOutputFilename)
+    if (arguments.["chart-of-accounts"].IsTrue) then
+        let report = (ReportChartOfAccounts.generateReport input)
+        (ReportChartOfAccounts.printReport report)
+        if excelOutputFilename <> "" then
+            ExcelOutput.Excel.write(report, excelOutputFilename)
 
     //demo()
     //printfn "%A" argv
