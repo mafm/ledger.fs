@@ -145,10 +145,7 @@ let usage = """Ledger.fs: simple command-line double-entry accounting.
 let main argv =
     let arguments = DocoptNet.Docopt().Apply(usage, argv, exit=true)
     let inputFileName = (string arguments.["<input-filename>"])
-    let excelOutputFilename =
-        match (string arguments.["--excel-output"]) with
-           | "" -> ""
-           | arg -> if arg.EndsWith(".xlsx") then arg else (arg + ".xlsx")
+    let destination = ExcelOutput.destination(string arguments.["--excel-output"])
     let dates = ([for d in arguments.["<date>"].AsList -> (string d)] |> List.sort)
     let input = (parseInputFile inputFileName)
     (validate input)
@@ -156,26 +153,24 @@ let main argv =
     if (arguments.["running-balance"].IsTrue) then
         let report = (ReportRegister.generateReport input (string arguments.["<account>"]))
         (ReportRegister.printRegisterReport report)
-        if excelOutputFilename <> "" then
-                ExcelOutput.Excel.write(report, excelOutputFilename)
+        ExcelOutput.Excel.write(report, destination)
 
     if (arguments.["balances"].IsTrue) then
       let report = (ReportBalances.generateReport input)
       (ReportBalances.printBalanceReport report)
-      if excelOutputFilename <> "" then
-        ExcelOutput.Excel.write(report, excelOutputFilename)
+      ExcelOutput.Excel.write(report, destination)
 
     if (arguments.["balances-by-date"].IsTrue) then
+        if dates.Length < 1 then
+            fatal("balances-by-date requires at least one date.")
         let report = (ReportBalancesByDate.generateReport input dates)
         (ReportBalancesByDate.printReport report)
-        if excelOutputFilename <> "" then
-                ExcelOutput.Excel.write(report, excelOutputFilename)
+        ExcelOutput.Excel.write(report, destination)
 
     if (arguments.["chart-of-accounts"].IsTrue) then
         let report = (ReportChartOfAccounts.generateReport input)
         (ReportChartOfAccounts.printReport report)
-        if excelOutputFilename <> "" then
-            ExcelOutput.Excel.write(report, excelOutputFilename)
+        ExcelOutput.Excel.write(report, destination)
 
     //demo()
     //printfn "%A" argv
