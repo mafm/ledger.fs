@@ -121,16 +121,15 @@ port the old ones over from python.
 
 ## Status
 
-I'm about to use this software on a regular basis to do real work. I
-have been using [ledger.py](https://github.com/mafm/ledger.py/) for
-real work on a regular basis. I believe that what _has_ been
+I'm now using this software on a regular basis to do real work. I used
+[ledger.py](https://github.com/mafm/ledger.py/) for real work on a
+regular basis for a year or so. I believe that what _has_ been
 implemented is more or less correct. However, this program hasn't been
 extensively tested, so use it at your own risk.
 
 Lots of useful easy-to-implement features have not yet been
-implemented. I am currently (July 2015) attempting to get this
-working, and plan to add the following features asap:
-- Excel-formatted reports ([ledger.py](https://github.com/mafm/ledger.py/) had this)
+implemented. I am currently (August 2015) working on this and
+plan to add the following features asap:
 - multi-currency support
 - multi-entity support
 
