@@ -30,7 +30,6 @@ let save (destination : Destination) =
 let setHeader (cell: ExcelRangeBase) (header: string) =
     cell.Value <- header
     cell.Style.Font.Bold <- true
-    cell.AutoFitColumns();
 
 type Excel =
     static member setValue((cell: ExcelRangeBase),(str: string)) =
@@ -104,8 +103,9 @@ type Excel =
                 Excel.writeLines(report.lines, worksheet, 0, 3) |> ignore
                 worksheet.View.FreezePanes(3, 1)
                 worksheet.OutLineSummaryBelow <- false
-                for c in 1..(numDates * 2 + 2) do
-                    // This doesn't actually work perfectly with currency values - as far as I can see.
+                for c in 1..numDates do
+                    worksheet.Column(c).AutoFit(0.0)
+                for c in (numDates+2)..(numDates*2) do
                     worksheet.Column(c).AutoFit(0.0)
 
     static member writeLine((line: ReportBalances.Line),

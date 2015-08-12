@@ -123,7 +123,7 @@ port the old ones over from python.
 
 I'm now using this software on a regular basis to do real work. I used
 [ledger.py](https://github.com/mafm/ledger.py/) for real work on a
-regular basis for a year or so. I believe that what _has_ been
+regular basis for about two years. I believe that what _has_ been
 implemented is more or less correct. However, this program hasn't been
 extensively tested, so use it at your own risk.
 
