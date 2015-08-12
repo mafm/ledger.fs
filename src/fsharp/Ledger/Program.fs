@@ -136,10 +136,19 @@ let usage = """Ledger.fs: simple command-line double-entry accounting.
             Ledger.fs <input-filename> [--excel-output=<filename>] balances
             Ledger.fs <input-filename> [--excel-output=<filename>] balances-by-date <date>...
             Ledger.fs <input-filename> [--excel-output=<filename>] chart-of-accounts
+            Ledger.fs <input-filename> --excel-output=<filename> summary <date>...
 
             Options:
             -h --help                   Show this help.
-            --excel-output=<filename>   Generate Excel-readable report."""
+            --excel-output=<filename>   Generate Excel-readable report.
+
+            The summary option produces:
+            - balances-by-date
+            - transaction list
+            - chart-of-accounts
+
+            in a single excel file. Note that in this case, output to excel is NOT optional.
+            """
 
 [<EntryPoint>]
 let main argv =
@@ -171,6 +180,13 @@ let main argv =
         let report = (ReportChartOfAccounts.generateReport input)
         (ReportChartOfAccounts.printReport report)
         ExcelOutput.Excel.write(report, destination)
+
+    if (arguments.["summary"].IsTrue) then
+        ExcelOutput.Excel.write((ReportBalancesByDate.generateReport input dates), destination)
+        ExcelOutput.Excel.write((ReportChartOfAccounts.generateReport input), destination)
+        printf "Summary written to excel file."
+
+    ExcelOutput.save(destination)
 
     //demo()
     //printfn "%A" argv

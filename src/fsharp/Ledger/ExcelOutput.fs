@@ -14,7 +14,6 @@ let newFile (filename:string) =
     else
         f
 
-
 let destination (filename: string) =
     match filename with
     | "" -> None
@@ -22,6 +21,11 @@ let destination (filename: string) =
              let file = newFile (filename)
              let package = new ExcelPackage(file)
              Some package
+
+let save (destination : Destination) =
+    match destination with
+    | None -> ()
+    | Some package -> package.Save()
 
 let setHeader (cell: ExcelRangeBase) (header: string) =
     cell.Value <- header
@@ -60,7 +64,6 @@ type Excel =
                     rowCount <- rowCount + 1
                 for c in 1..5 do
                     worksheet.Column(c).AutoFit(0.0)
-                package.Save()
 
     static member writeLine((line: ReportBalancesByDate.ReportBalancesByDateLine), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
         let mutable column = 1
@@ -101,7 +104,6 @@ type Excel =
                 Excel.writeLines(report.lines, worksheet, 0, 3) |> ignore
                 worksheet.View.FreezePanes(3, 1)
                 worksheet.OutLineSummaryBelow <- false
-                package.Save()
 
     static member writeLine((line: ReportBalances.Line),
                             (ws : ExcelWorksheet),
@@ -134,7 +136,6 @@ type Excel =
             Excel.writeLines(report.lines, worksheet, 0, 2) |> ignore
             worksheet.View.FreezePanes(2, 1)
             worksheet.OutLineSummaryBelow <- false
-            package.Save()
 
     static member writeLine((line: ReportChartOfAccounts.Line),
                             (ws : ExcelWorksheet),
@@ -164,4 +165,3 @@ type Excel =
                 Excel.writeLines(report.lines, worksheet, 0, 2) |> ignore
                 worksheet.View.FreezePanes(2, 1)
                 worksheet.OutLineSummaryBelow <- false
-                package.Save()

@@ -2,7 +2,7 @@
 
 **Ledger.fs** is a _simple_, command-line, double-entry accounting
 system. It reads transactions written in a simple format from a text
-file and produces summary reports as text (or, sooon ... an excel spreadsheet.)
+file and produces summary reports as text or an Excel spreadsheet.
 
 Because transaction data is stored as text, it can be managed
 using a version control system like git. This makes it easy
@@ -17,7 +17,6 @@ is simpler, easier to extend, and runs at least an order of magnitude faster.
 
 **Warning - currently under construction.** This _does_ calculate the
 reports described in this README, but doesn't yet do useful extra stuff like:
-- Excel-formatted reports
 - multi-currency input-files
 - multi-entity input-files
 
