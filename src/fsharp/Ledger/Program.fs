@@ -136,7 +136,9 @@ let usage = """Ledger.fs: simple command-line double-entry accounting.
             Ledger.fs <input-filename> [--excel-output=<filename>] balances
             Ledger.fs <input-filename> [--excel-output=<filename>] balances-by-date <date>...
             Ledger.fs <input-filename> [--excel-output=<filename>] chart-of-accounts
+            Ledger.fs <input-filename> [--excel-output=<filename>] transactions [<first-date>] [<last-date>]
             Ledger.fs <input-filename> --excel-output=<filename> summary <date>...
+
 
             Options:
             -h --help                   Show this help.
@@ -156,6 +158,8 @@ let main argv =
     let inputFileName = (string arguments.["<input-filename>"])
     let destination = ExcelOutput.destination(string arguments.["--excel-output"])
     let dates = ([for d in arguments.["<date>"].AsList -> (string d)] |> List.sort)
+    let firstDate = match (string arguments.["<first-date>"]) with | "" -> None | date -> Some date
+    let lastDate = match (string arguments.["<last-date>"]) with | "" -> None | date -> Some date
     let input = (parseInputFile inputFileName)
     (validate input)
 
@@ -181,9 +185,19 @@ let main argv =
         (ReportChartOfAccounts.printReport report)
         ExcelOutput.Excel.write(report, destination)
 
+    if (arguments.["transactions"].IsTrue) then
+        let report = (ReportTransactionList.generateReport input firstDate lastDate)
+        (ReportTransactionList.printReport report)
+        ExcelOutput.Excel.write(report, destination)
+
     if (arguments.["summary"].IsTrue) then
+        if dates.Length < 1 then
+            fatal("summary requires at least one date.")
         ExcelOutput.Excel.write((ReportBalancesByDate.generateReport input dates), destination)
         ExcelOutput.Excel.write((ReportChartOfAccounts.generateReport input), destination)
+        let firstDate = Some (List.min dates)
+        let lastDate = Some (List.max dates)
+        ExcelOutput.Excel.write((ReportTransactionList.generateReport input firstDate lastDate), destination)
         printf "Summary written to excel file."
 
     ExcelOutput.save(destination)

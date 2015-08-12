@@ -4,9 +4,6 @@
 *** balances report (excel)
 *** balances-by-date report (excel)
 
-** Add a transaction report:
-   with transaction#/date/desc with amount/account children
-
 * Bugs
 ** DONE Accounts reported with "canonical", not "input" names
 

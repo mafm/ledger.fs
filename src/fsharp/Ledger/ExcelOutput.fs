@@ -104,6 +104,9 @@ type Excel =
                 Excel.writeLines(report.lines, worksheet, 0, 3) |> ignore
                 worksheet.View.FreezePanes(3, 1)
                 worksheet.OutLineSummaryBelow <- false
+                for c in 1..(numDates * 2 + 2) do
+                    // This doesn't actually work perfectly with currency values - as far as I can see.
+                    worksheet.Column(c).AutoFit(0.0)
 
     static member writeLine((line: ReportBalances.Line),
                             (ws : ExcelWorksheet),
@@ -165,3 +168,65 @@ type Excel =
                 Excel.writeLines(report.lines, worksheet, 0, 2) |> ignore
                 worksheet.View.FreezePanes(2, 1)
                 worksheet.OutLineSummaryBelow <- false
+
+    static member writeLine((line: ReportTransactionList.Line),
+                            (ws : ExcelWorksheet),
+                            (nextRow: int)) =
+      let mutable nextRow = nextRow
+
+      let txnCell = ws.Cells.[nextRow, 1]
+      let dateCell = ws.Cells.[nextRow, 2]
+      let descCell = ws.Cells.[nextRow, 3]
+
+      Excel.setValue (txnCell, (sprintf "txn:%d" line.id))
+      txnCell.Style.Border.Top.Style <- OfficeOpenXml.Style.ExcelBorderStyle.Thin
+
+      Excel.setValue (dateCell, line.transaction.date)
+      dateCell.Style.Font.Bold <- true
+      dateCell.Style.Border.Top.Style <- OfficeOpenXml.Style.ExcelBorderStyle.Thin
+
+      Excel.setValue (descCell, line.transaction.description)
+      descCell.Style.Font.Bold <- true
+      descCell.Style.Font.Italic <- true
+      descCell.Style.Border.Top.Style <- OfficeOpenXml.Style.ExcelBorderStyle.Thin
+
+      nextRow <- nextRow+1
+
+      for p in line.transaction.postings do
+        Excel.setValue (ws.Cells.[nextRow, 2], p.amount)
+        Excel.setValue (ws.Cells.[nextRow, 3], p.account)
+        nextRow <- nextRow+1
+      nextRow
+
+    static member writeLines((lines : ReportTransactionList.Line list),
+                             (ws : ExcelWorksheet),
+                             (nextRow: int)) =
+        match lines with
+            | [] -> nextRow
+            | first::rest -> Excel.writeLines(rest, ws, Excel.writeLine(first, ws, nextRow))
+
+    static member write((report : ReportTransactionList.Report), (destination : Destination)) =
+        match destination with
+            | None -> ()
+            | Some package ->
+                let mutable nextRow = 1
+                let worksheet = package.Workbook.Worksheets.Add("Transactions")
+
+                match report.first with
+                | Some date -> (setHeader worksheet.Cells.[nextRow, 1] "From:")
+                               (setHeader worksheet.Cells.[nextRow, 2] date)
+                               nextRow <- nextRow+1
+                | None -> ()
+                match report.last with
+                | Some date -> (setHeader worksheet.Cells.[nextRow, 1] "To:")
+                               (setHeader worksheet.Cells.[nextRow, 2] date)
+                               nextRow <- nextRow+1
+                | None -> ()
+                (setHeader worksheet.Cells.[nextRow, 1] "Transaction#")
+                (setHeader worksheet.Cells.[nextRow, 2] "Date/Amount")
+                (setHeader worksheet.Cells.[nextRow, 3] "Description/Account")
+                nextRow <- nextRow + 1
+                worksheet.View.FreezePanes(nextRow, 1)
+                Excel.writeLines(report.lines, worksheet, nextRow) |> ignore
+                for c in 1..3 do
+                    worksheet.Column(c).AutoFit(0.0)

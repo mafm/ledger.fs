@@ -65,6 +65,7 @@
     <Compile Include="TextOutput.fs" />
     <Compile Include="ReportRegister.fs" />
     <Compile Include="RegisterReportTest.fs" />
+    <Compile Include="ReportTransactionList.fs" />
     <Compile Include="ReportBalances.fs" />
     <Compile Include="ReportBalancesByDates.fs" />
     <Compile Include="ReportChartOfAccounts.fs" />
