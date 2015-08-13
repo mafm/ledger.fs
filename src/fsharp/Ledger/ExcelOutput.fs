@@ -2,6 +2,7 @@
 
 open InputTypes
 open TextOutput
+open InternalTypes
 open OfficeOpenXml
 
 type Destination = ExcelPackage option
@@ -30,6 +31,12 @@ let save (destination : Destination) =
 let setHeader (cell: ExcelRangeBase) (header: string) =
     cell.Value <- header
     cell.Style.Font.Bold <- true
+
+let setIndent (ws : ExcelWorksheet) (row: int) (indent: int) =
+    ws.Row(row).OutlineLevel <- (indent)
+
+let collapse (ws : ExcelWorksheet) (row: int) =
+    ws.Row(row).Collapsed <- true
 
 type Excel =
     static member setValue((cell: ExcelRangeBase),(str: string)) =
@@ -71,8 +78,47 @@ type Excel =
     static member depth((report : ReportBalancesByDate.Report)) =
         (List.fold max 0 (List.map Excel.depthLine report.lines))
 
-    static member writeLine((line: ReportBalancesByDate.Line), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
+    static member writeLine((line: ReportBalancesByDate.Line), (dates: Date list), (ws : ExcelWorksheet), (indent: int), (nextRow: int), (txnCol:int)) =
+
+        let writePosting (d: PostingDetail) (nextRow: int) =
+            setIndent ws nextRow (indent+1)
+
+            let mutable col = 1
+            for date in dates do
+                if d.transaction.date <= date then
+                    Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
+                    ws.Cells.[nextRow, col].Style.Font.Italic <- true
+                col <- col + 1
+            col <- col + 1
+            match dates with
+            | first::rest -> let mutable prevDate = first
+                             for date in rest do
+                                if ((prevDate < d.transaction.date) && (d.transaction.date <= date)) then
+                                    Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
+                                    ws.Cells.[nextRow, col].Style.Font.Italic <- true
+                                col <- col + 1
+                                prevDate <- date
+            | [] -> ()
+
+            Excel.setValue (ws.Cells.[nextRow, txnCol], (Text.fmtTxnId d.transaction.id))
+            Excel.setValue (ws.Cells.[nextRow, txnCol+1], (Text.fmtDate d.transaction.date))
+            Excel.setValue (ws.Cells.[nextRow, txnCol+2], d.transaction.description)
+
+            ws.Cells.[nextRow, txnCol].Style.Font.Italic <- true
+            ws.Cells.[nextRow, txnCol+1].Style.Font.Italic <- true
+            ws.Cells.[nextRow, txnCol+2].Style.Font.Italic <- true
+            (collapse ws nextRow)
+
+            nextRow+1
+
+        let rec writePostings (postings: PostingDetail List) (nextRow: int) =
+            match postings with
+            | [] -> nextRow
+            | first::rest ->
+                writePostings rest (writePosting first nextRow)
+
         let mutable column = 1
+        (setIndent ws nextRow indent)
         for balance in line.amounts.balances do
             (Excel.setValue (ws.Cells.[nextRow, column], balance))
             column <- column + 1
@@ -82,17 +128,15 @@ type Excel =
             column <- column + 1
         column <- column + 1
         Excel.setValue (ws.Cells.[nextRow, column+indent], line.account)
-        if indent <> 0 then
-            ws.Row(nextRow).OutlineLevel <- (indent)
-        let rowAfterChildren = Excel.writeLines (line.subAccounts, ws, indent+1, nextRow+1)
-        if rowAfterChildren <> nextRow then
-            ws.Row(nextRow).Collapsed <- true
-        rowAfterChildren
+        let rowAfterChildren = Excel.writeLines (line.subAccounts, dates, ws, indent+1, (nextRow+1), txnCol)
+        let rowAfterPostings = (writePostings line.postings rowAfterChildren)
+        (collapse ws nextRow)
+        rowAfterPostings
 
-    static member writeLines((lines : ReportBalancesByDate.Line list), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
+    static member writeLines((lines : ReportBalancesByDate.Line list),(dates: Date list), (ws : ExcelWorksheet),  (indent: int), (nextRow: int), (txnCol:int)) =
         match lines with
             | [] -> nextRow
-            | first::rest -> Excel.writeLines(rest, ws, indent, Excel.writeLine(first, ws, indent, nextRow))
+            | first::rest -> Excel.writeLines(rest, dates, ws, indent, Excel.writeLine(first, dates, ws, indent, nextRow, txnCol), txnCol)
 
     static member write((report : ReportBalancesByDate.Report), (destination : Destination)) =
         match destination with
@@ -114,7 +158,7 @@ type Excel =
                 (setHeader worksheet.Cells.[2, txnNumCol+1] "Date")
                 (setHeader worksheet.Cells.[2, txnNumCol+2] "Description")
 
-                Excel.writeLines(report.lines, worksheet, 0, 3) |> ignore
+                Excel.writeLines(report.lines, report.dates, worksheet,  0, 3, txnNumCol) |> ignore
                 worksheet.View.FreezePanes(3, 1)
                 worksheet.OutLineSummaryBelow <- false
                 for c in 1..numDates do
@@ -123,7 +167,7 @@ type Excel =
                     worksheet.Column(c).AutoFit(0.0)
                 for c in (numDates+2)..(numDates*2) do
                     worksheet.Column(c).AutoFit(0.0)
-                for c in (txnNumCol)..(txnNumCol+1) do
+                for c in (txnNumCol-1)..(txnNumCol+2) do
                     worksheet.Column(c).AutoFit(0.0)
 
     static member writeLine((line: ReportBalances.Line),

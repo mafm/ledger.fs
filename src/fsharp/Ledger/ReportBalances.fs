@@ -12,7 +12,7 @@ open Misc
 open TextOutput
 open PersistentCollections
 
-type Line = 
+type Line =
     { account : AccountName
       balance : Amount
       subAccounts : Line list }
@@ -25,7 +25,7 @@ let rec accountBalanceReport (name:string)  (a: Account) =
     // If an account has no postings of its own and exactly one sub-account, we treat that subaccount as the
     // account. This produces much neater reports - if you like the text reports.
     match subAccounts with
-    | [(onlyChild)] when (a.postings = onlyChild.postings)
+    | [(onlyChild)] when (a.postings = PersistentQueue.Empty)
         -> (accountBalanceReport (name + ":" + onlyChild.name) onlyChild)
     | _ -> { account = name;
              balance = a.balance;

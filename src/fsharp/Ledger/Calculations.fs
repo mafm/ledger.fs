@@ -86,8 +86,9 @@ let transactionAffects (t: Transaction) (a: AccountName) =
 /// them. Typically the last set of accounts will contain all the ones we want to visit. Here's
 /// a way of specifying the map of accounts we want to traverse.
 /// (There must be a better name for this type.)
-type AccountNameTree =
-    | Node of name: AccountNameComponents * children:  AccountNameTree list
+type AccountNameTree = { name: AccountNameComponents;
+                         children: AccountNameTree list;
+                         postings: PostingDetail List}
 
 // Given an account (and it's canonical name), construct the tree of account names rooted at the account.
 // Here's the only real trick in the whole system:
@@ -98,13 +99,12 @@ let rec constructAccountNameTree (a: Account) (canonicalName: string) =
                                     (a.subAccounts |> Seq.sortBy (fun (KeyValue(k,v)) -> v.name))
                                  -> (subAccount, cName)]
     match subAccountsWithCNames with
-        | [(onlyChild, onlyChildCName)] when (a.postings = onlyChild.postings)
-            -> match (constructAccountNameTree onlyChild onlyChildCName) with
-                Node(subAccountName, subAccountChildren)
-                  -> Node(({canonical = canonicalName; input = a.name}::subAccountName),
-                          subAccountChildren)
-        | _ -> Node([{canonical = canonicalName; input = a.name}],
-                    [for (subAccount, cName) in subAccountsWithCNames -> (constructAccountNameTree subAccount cName)])
+        | [(onlyChild, onlyChildCName)] when (a.postings = PersistentQueue.Empty)
+            -> let childTree = (constructAccountNameTree onlyChild onlyChildCName)
+               {childTree with name = ({canonical = canonicalName; input = a.name}::childTree.name)}
+        | _ -> {name = [{canonical = canonicalName; input = a.name}];
+                children = [for (subAccount, cName) in subAccountsWithCNames -> (constructAccountNameTree subAccount cName)];
+                postings =  (List.ofSeq a.postings)}
 
 // Construct map where keys are the given dates and values are the "Accounts" at that date.
 let accountsByDate (input: InputFile) (dates: Date list) =

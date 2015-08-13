@@ -131,7 +131,7 @@ regular basis for about two years. I believe that what _has_ been
 implemented is more or less correct. However, this program hasn't been
 extensively tested, so use it at your own risk.
 
-Lots of useful easy-to-implement features have not yet been
+A couple of useful easy-to-implement features have not yet been
 implemented. I am currently (August 2015) working on this and
 plan to add the following features asap:
 - multi-currency support

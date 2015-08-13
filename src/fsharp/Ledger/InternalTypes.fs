@@ -161,8 +161,9 @@ type Account = struct
                                                                     AUD 0)
                                     let subAccount = subAccount.Book(p, t, subSubAccountDetails)
                                     this.subAccounts.Add(subAccountName.canonical, subAccount)),
-
-                    this.postings.Enqueue({posting=p; transaction=t}), /// XXX: Will change this to book only to relevant subaccount, not to both parent and subaccount.
+                    (match subAccountDetails with
+                            | [] -> this.postings.Enqueue({posting=p; transaction=t})
+                            | _ ->  this.postings),
                     (addAmounts this.balance p.amount))
       member this.find (accountDetails: AccountNameComponent list) : Account option =
         match accountDetails with

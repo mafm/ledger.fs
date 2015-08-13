@@ -25,3 +25,4 @@ type Text =
     // is concerned, so we use method name to disambiguate.
     static member fmtDate (x: Date) = (sprintf "%s" x)
     static member fmtAccountName (x: AccountName) = (sprintf "%s" x)
+    static member fmtTxnId (i: int) = (sprintf "txn:%d" i)

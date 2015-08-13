@@ -15,12 +15,13 @@ open PersistentCollections
 type BalancesAndDifferences = {
         // balances will have one entry for each element in the report's date list,
         // differences will have an entry for every date but the first.
-        balances : Amount list     
+        balances : Amount list
         differences : Amount list}
 
 type Line = { account: AccountName
               amounts: BalancesAndDifferences
-              subAccounts: Line list}
+              subAccounts: Line list
+              postings: PostingDetail list}
 
 type Report = {dates: Date list
                lines: Line list}
@@ -49,24 +50,24 @@ let rec differences (amounts: Amount list) =
         | first::second::rest -> (difference first second):: (differences (second::rest))
         | _ -> []
 
-let rec constructReportBalancesByDateLine (accounts: Account option List) (accountTree: AccountNameTree) =
-    match accountTree with
-        | Node(name, children) ->            
-            let balances = (List.map (fun (a:Account option) -> match a with
-                                                                | Some account -> account.balance
-                                                                | None -> zeroAmount)                                                
-                                     accounts)
-            { account = (Text.fmt name);
-              amounts = {balances = balances; differences = (differences balances)};
-              subAccounts = [for child in children ->
-                                    (match child with 
-                                        | Node(childName, grandChildren) -> (constructReportBalancesByDateLine
-                                                                                [for a in accounts -> (extractSubAccount a childName)]
-                                                                                child))]}
+let rec constructReportBalancesByDateLine (accounts : Account option List) (accountTree : AccountNameTree) =
+    let balances =
+        (List.map (fun (a : Account option) ->
+             match a with
+             | Some account -> account.balance
+             | None -> zeroAmount) accounts)
+    { account = (Text.fmt accountTree.name)
+      amounts =
+          { balances = balances
+            differences = (differences balances) }
+      subAccounts =
+          [ for child in accountTree.children ->
+                (constructReportBalancesByDateLine [ for a in accounts -> (extractSubAccount a child.name) ] child) ]
+      postings = accountTree.postings }
 
 let addLine (name: AccountName) (accounts: DatedAccounts) (dates: Date list) linesSoFar =
     let lastDate = (List.max dates)
-    let finalAccounts = accounts.[lastDate] in        
+    let finalAccounts = accounts.[lastDate] in
     match finalAccounts.find(name)  with
         | Some finalAccount -> ((constructReportBalancesByDateLine (List.map (fun date -> accounts.[date].find(name)) dates)
                                                                    (constructAccountNameTree finalAccount finalAccount.name))
@@ -83,9 +84,9 @@ let generateReport (input: InputFile) (dates: Date list)  =
              (addLine "Equity" datedAccounts dates [])))))}
 
 let rec printReportLine indent (line : Line) =
-    for balance in line.amounts.balances do    
+    for balance in line.amounts.balances do
         printf "%s\t" (Text.fmt balance)
-    for difference in line.amounts.differences do    
+    for difference in line.amounts.differences do
         printf "%s\t" (Text.fmt difference)
     for i in 1 .. indent do
         printf " "
@@ -103,17 +104,17 @@ let printReport report =
         printf "Change"
         for i in 1 .. (report.dates.Length-2) do
             printf "\t"
-        printf "\n"                            
+        printf "\n"
     (* date/"Account" headings line*)
-    for date in report.dates do    
+    for date in report.dates do
         printf "%s\t" (Text.fmtDate date)
-    match report.dates with        
+    match report.dates with
         | first::rest ->
-            for date in rest do    
+            for date in rest do
                 printf "%s\t" date
         | _ -> ()
     printf "Account\n"
-    (printf "%s%s-------\n" 
+    (printf "%s%s-------\n"
         (String.replicate report.dates.Length "----------\t")
         (String.replicate (report.dates.Length-1) "----------\t"))
     for line in report.lines do

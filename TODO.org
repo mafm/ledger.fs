@@ -1,8 +1,4 @@
 * ASAP
-** Add transactions to reports:
-   Both these need to have txnid/description on them.
-*** balances report (excel)
-*** balances-by-date report (excel)
 
 * Bugs
 ** DONE Accounts reported with "canonical", not "input" names
@@ -37,6 +33,7 @@
     If given an <end-date>, it should not print transactions after
     that date.
 *** Excel-formatted output
+**** Add transactions: txnid/description/amount to balance report (excel version only)
 *** text-formatted
 **** Justify columns
      appropriately when producing (default) text-formatted reports.

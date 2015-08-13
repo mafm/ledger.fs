@@ -34,8 +34,8 @@ type ``Test Internal Types`` () =
         a2.balance |> should equal (AUD 100000)
         a2.subAccounts.["BANKWEST"].balance |> should equal (AUD 100000)
         a2.subAccounts.["BANKWEST"].subAccounts.["CHEQUE"].balance |> should equal (AUD 100000)
-        a2.postings |> should equal (PersistentQueue.Empty.Enqueue detail)
-        a2.subAccounts.["BANKWEST"].postings |> should equal (PersistentQueue.Empty.Enqueue detail)
+        a2.postings |> should equal PersistentQueue.Empty
+        a2.subAccounts.["BANKWEST"].postings |> should equal PersistentQueue.Empty
         a2.subAccounts.["BANKWEST"].subAccounts.["CHEQUE"].postings |> should equal (PersistentQueue.Empty.Enqueue detail)
     [<Test>]
     member test.``Book posting to Accounts.``() =
@@ -55,8 +55,8 @@ type ``Test Internal Types`` () =
         a2.Accounts.["ASSETS"].balance |> should equal (AUD 100000)
         a2.Accounts.["ASSETS"].subAccounts.["BANKWEST"].balance |> should equal (AUD 100000)
         a2.Accounts.["ASSETS"].subAccounts.["BANKWEST"].subAccounts.["CHEQUE"].balance |> should equal (AUD 100000)
-        a2.Accounts.["ASSETS"].postings |> should equal (PersistentQueue.Empty.Enqueue detail)
-        a2.Accounts.["ASSETS"].subAccounts.["BANKWEST"].postings |> should equal (PersistentQueue.Empty.Enqueue detail)
+        a2.Accounts.["ASSETS"].postings |> should equal PersistentQueue.Empty
+        a2.Accounts.["ASSETS"].subAccounts.["BANKWEST"].postings |> should equal PersistentQueue.Empty
         a2.Accounts.["ASSETS"].subAccounts.["BANKWEST"].subAccounts.["CHEQUE"].postings |> should equal (PersistentQueue.Empty.Enqueue detail)
     [<Test>]
     member test.``Book transaction to Accounts.``() =
@@ -77,5 +77,7 @@ type ``Test Internal Types`` () =
         a2.Accounts.ContainsKey("EQUITY") |> should be True
         a2.Accounts.["ASSETS"].balance |> should equal (AUD 100000)
         a2.Accounts.["EQUITY"].balance |> should equal (AUD 100000)
-        a2.Accounts.["ASSETS"].postings |> should equal (PersistentQueue.Empty.Enqueue detail0)
-        a2.Accounts.["EQUITY"].postings |> should equal (PersistentQueue.Empty.Enqueue detail1)
+        a2.Accounts.["ASSETS"].postings |> should equal (PersistentQueue.Empty)
+        a2.Accounts.["EQUITY"].postings |> should equal (PersistentQueue.Empty)
+        a2.Accounts.["ASSETS"].subAccounts.["BANKWEST"].subAccounts.["CHEQUE"].postings |> should equal (PersistentQueue.Empty.Enqueue detail0)
+        a2.Accounts.["EQUITY"].subAccounts.["OPENINGBALANCES"].postings |> should equal (PersistentQueue.Empty.Enqueue detail1)
