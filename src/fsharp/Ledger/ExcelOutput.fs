@@ -64,7 +64,14 @@ type Excel =
                 for c in 1..5 do
                     worksheet.Column(c).AutoFit(0.0)
 
-    static member writeLine((line: ReportBalancesByDate.ReportBalancesByDateLine), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
+    static member depthLine((line : ReportBalancesByDate.Line)) =
+        1 + (List.fold max 0 (List.map Excel.depthLine line.subAccounts))
+    /// How deeply are the accounts in this report nested?
+
+    static member depth((report : ReportBalancesByDate.Report)) =
+        (List.fold max 0 (List.map Excel.depthLine report.lines))
+
+    static member writeLine((line: ReportBalancesByDate.Line), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
         let mutable column = 1
         for balance in line.amounts.balances do
             (Excel.setValue (ws.Cells.[nextRow, column], balance))
@@ -82,16 +89,17 @@ type Excel =
             ws.Row(nextRow).Collapsed <- true
         rowAfterChildren
 
-    static member writeLines((lines : ReportBalancesByDate.ReportBalancesByDateLine list), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
+    static member writeLines((lines : ReportBalancesByDate.Line list), (ws : ExcelWorksheet), (indent: int), (nextRow: int)) =
         match lines with
             | [] -> nextRow
             | first::rest -> Excel.writeLines(rest, ws, indent, Excel.writeLine(first, ws, indent, nextRow))
 
-    static member write((report : ReportBalancesByDate.ReportBalancesByDate), (destination : Destination)) =
+    static member write((report : ReportBalancesByDate.Report), (destination : Destination)) =
         match destination with
             | None  -> ()
             | Some package ->
                 let numDates = report.dates.Length
+                let accountDepth = Excel.depth(report)
                 let worksheet = package.Workbook.Worksheets.Add("Balances by Date")
                 (setHeader worksheet.Cells.[1, 1] "Balance")
                 for i in 1 .. numDates do
@@ -100,12 +108,22 @@ type Excel =
                 for i in 2 .. numDates do
                     (setHeader worksheet.Cells.[2, numDates+i] report.dates.[i-1])
                 (setHeader worksheet.Cells.[2, numDates*2+2] "Account")
+
+                let txnNumCol = numDates*2+2+accountDepth
+                (setHeader worksheet.Cells.[2, txnNumCol] "Transaction#")
+                (setHeader worksheet.Cells.[2, txnNumCol+1] "Date")
+                (setHeader worksheet.Cells.[2, txnNumCol+2] "Description")
+
                 Excel.writeLines(report.lines, worksheet, 0, 3) |> ignore
                 worksheet.View.FreezePanes(3, 1)
                 worksheet.OutLineSummaryBelow <- false
                 for c in 1..numDates do
                     worksheet.Column(c).AutoFit(0.0)
                 for c in (numDates+2)..(numDates*2) do
+                    worksheet.Column(c).AutoFit(0.0)
+                for c in (numDates+2)..(numDates*2) do
+                    worksheet.Column(c).AutoFit(0.0)
+                for c in (txnNumCol)..(txnNumCol+1) do
                     worksheet.Column(c).AutoFit(0.0)
 
     static member writeLine((line: ReportBalances.Line),
@@ -178,7 +196,7 @@ type Excel =
       let dateCell = ws.Cells.[nextRow, 2]
       let descCell = ws.Cells.[nextRow, 3]
 
-      Excel.setValue (txnCell, (sprintf "txn:%d" line.id))
+      Excel.setValue (txnCell, (sprintf "txn:%d" line.transaction.id))
       txnCell.Style.Border.Top.Style <- OfficeOpenXml.Style.ExcelBorderStyle.Thin
 
       Excel.setValue (dateCell, line.transaction.date)

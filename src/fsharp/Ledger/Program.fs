@@ -193,11 +193,10 @@ let main argv =
     if (arguments.["summary"].IsTrue) then
         if dates.Length < 1 then
             fatal("summary requires at least one date.")
-        let firstDate = Some (List.min dates)
         let lastDate = Some (List.max dates)
         ExcelOutput.Excel.write((ReportBalancesByDate.generateReport input dates), destination)
         ExcelOutput.Excel.write((ReportChartOfAccounts.generateReport input), destination)
-        ExcelOutput.Excel.write((ReportTransactionList.generateReport input firstDate lastDate), destination)
+        ExcelOutput.Excel.write((ReportTransactionList.generateReport input None lastDate), destination)
         printf "Summary written to excel file."
 
     ExcelOutput.save(destination)

@@ -11,8 +11,7 @@ open TextOutput
 open PersistentCollections
 
 type Line = 
-    { id: int
-      transaction: Transaction }
+    { transaction: Transaction }
 
 type Report = { first: Date Option
                 last:  Date Option
@@ -28,23 +27,23 @@ let filter (transactions : Transaction list) (first : Date option) (last : Date 
     transactions
 
 let generateReport (input: InputFile) firstDate lastDate =   
-    let addTransaction (t: Transaction) (nextId: int) (resultSoFar: PersistentCollections.PersistentQueue<Line>) =
+    let addTransaction (t: Transaction) (resultSoFar: PersistentCollections.PersistentQueue<Line>) =
         match firstDate with
             | Some firstDate when (firstDate > t.date) -> resultSoFar
             | _ -> match lastDate with
                     | Some lastDate when (lastDate < t.date) -> resultSoFar
-                    | _ -> (resultSoFar.Enqueue {id=nextId; transaction=t})
+                    | _ -> (resultSoFar.Enqueue {transaction=t})
             
     let rec addLines (t: Transaction List) (nextId: int) (resultSoFar: PersistentCollections.PersistentQueue<Line>) =
         match t with
         | [] -> resultSoFar
-        | first::rest -> (addLines rest (nextId+1) (addTransaction first nextId resultSoFar))
+        | first::rest -> (addLines rest (nextId+1) (addTransaction first resultSoFar))
     {first = firstDate
      last  = lastDate
      lines = (List.ofSeq (addLines (transactions input) 1 PersistentCollections.PersistentQueue.Empty))}
 
 let rec printLine (line : Line) =
-    printf "%d\t" line.id
+    printf "%d\t" line.transaction.id
     printf "%s\t" (Text.fmtDate line.transaction.date)
     printf "\t" 
     printf "%s\t" line.transaction.description

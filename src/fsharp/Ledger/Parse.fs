@@ -1,8 +1,18 @@
 ﻿module Parse
 
-open FParsec
+
 open InputTypes
 open Misc
+
+open FParsec
+
+// XXX: Yuck! Can I do this without global state!
+let mutable transactionId = 0
+let nextTransactionId () =
+    transactionId <- transactionId + 1
+    transactionId
+let resetTransactionId () =
+    transactionId <- 0
 
 type ParseResult =
     | ParseError of string
@@ -75,7 +85,8 @@ let pTransaction =
         (fun date description postings ->
            Transaction { Transaction.date = date;
                          Transaction.description = description;
-                         Transaction.postings = postings})
+                         Transaction.postings = postings
+                         Transaction.id = nextTransactionId()})
 
 let pInput =
     pOptionalSpace >>. (pCommentLine <|> pBlankLine <|> pVerifyBalance <|> pTransaction)
@@ -89,6 +100,7 @@ let pInputFile =
 
 // Top-level parsing routine(s).
 let parseInputString str =
+    resetTransactionId() // XXX: Yuck! Can I do this without global state!
     match run pInputFile str with
         | Success(result, _, _) -> ParseSuccess(result)
         | Failure(errorMessage, _, _) -> ParseError(errorMessage)

@@ -57,7 +57,8 @@ type ``Test Internal Types`` () =
              postings = [{account = "Asset:Bankwest:Cheque";
                           amount = AUD 100000;};
                          {account = "Equity:OpeningBalances";
-                          amount = AUD 100000;}];}
+                          amount = AUD 100000;}];
+             id=1}
         let a = Accounts()
         let a2 = a.Book(t)
         a2.Accounts.ContainsKey("ASSETS") |> should be True

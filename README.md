@@ -114,6 +114,10 @@ file in its doc folder. Most of that applies to ledger.fs.
 
 I used visual studio community 2013 to build this.
 
+There are a couple of nuget libraries needed to build this. As far as
+I know, the package manager in visual studio should fetch them for
+you.
+
 #### Testing
 
 I haven't written as many tests as I would like. I should probably

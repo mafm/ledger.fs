@@ -18,16 +18,14 @@ type BalancesAndDifferences = {
         balances : Amount list     
         differences : Amount list}
 
-type ReportBalancesByDateLine = { account: AccountName
-                                  amounts: BalancesAndDifferences
-                                  subAccounts: ReportBalancesByDateLine list}
+type Line = { account: AccountName
+              amounts: BalancesAndDifferences
+              subAccounts: Line list}
 
-type ReportBalancesByDate = {dates: Date list
-                             lines: ReportBalancesByDateLine list}
+type Report = {dates: Date list
+               lines: Line list}
 
 type DatedAccounts = PersistentDictionary<Date, Accounts>
-
-
 
 /// Can't I do this without a helper function?
 let extractBalance (a: Account option) =
@@ -84,7 +82,7 @@ let generateReport (input: InputFile) (dates: Date list)  =
              (addLine "Expenses" datedAccounts dates
              (addLine "Equity" datedAccounts dates [])))))}
 
-let rec printReportLine indent (line : ReportBalancesByDateLine) =
+let rec printReportLine indent (line : Line) =
     for balance in line.amounts.balances do    
         printf "%s\t" (Text.fmt balance)
     for difference in line.amounts.differences do    

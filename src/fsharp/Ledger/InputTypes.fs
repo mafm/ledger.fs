@@ -9,10 +9,10 @@ exception BadAccountName of name: string * problem: string
 type Date = string
 type Description = string
 
-type AccountName = string 
+type AccountName = string
 
 type Amount =
-    /// AUD amounts are stored as cents, and converted to dollars on input/output. 
+    /// AUD amounts are stored as cents, and converted to dollars on input/output.
     | AUD of int
 
 let zeroAmount = AUD 0
@@ -31,11 +31,12 @@ let absAmount (a: Amount) =
     | AUD a -> AUD (abs a)
 
 type Posting = { account: AccountName
-                 amount:  Amount}               
+                 amount:  Amount}
 
 type Transaction = { date:    Date
                      description: Description
-                     postings: Posting list}                     
+                     postings: Posting list
+                     id: int}
 
 type BalanceVerfication = { date:    Date
                             account: AccountName
@@ -46,6 +47,5 @@ type Input =
     | BalanceVerfication of BalanceVerfication
     | BlankLine
     | Comment of string
-                                 
-type InputFile = Input list
 
+type InputFile = Input list
