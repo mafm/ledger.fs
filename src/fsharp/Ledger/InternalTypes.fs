@@ -80,6 +80,10 @@ let splitAccountName (name: AccountName) =
 let canonicalAccountName (name: AccountName) =
     (List.map (fun x -> x.canonical) (splitAccountName name))
 
+/// When we record a posting, we will often want the transaction it was part of for later reports.
+type PostingDetail = { posting: Posting
+                       transaction: Transaction}
+
 /// An account contains:
 /// - a balance
 /// - sub-accounts
@@ -113,14 +117,14 @@ type Account = struct
       /// Balances of sub-accounts contribute to balance of containing account.
       val subAccounts: PersistentDictionary<string, Account>
       /// Amounts in postings contribute to balance of account they are posted to.
-      val postings: PersistentQueue<Posting>
+      val postings: PersistentQueue<PostingDetail>
       /// Balance is the sum of direct postings and balances of sub-accounts.
       val balance: Amount
       private new (fullName: string,
                    name: string,
                    sign: int,
                    subAccounts: PersistentDictionary<string, Account>,
-                   postings: PersistentQueue<Posting>,
+                   postings: PersistentQueue<PostingDetail>,
                    balance: Amount) = {fullName = fullName;
                                        name = name;
                                        sign = sign;
@@ -139,7 +143,7 @@ type Account = struct
       /// Add posting to this.postings,
       /// add posting.amount to this.balance, and
       /// book posting to relevant sub-account.
-      member this.Book (p: Posting, (subAccountDetails: AccountNameComponent list)) =
+      member this.Book ((p: Posting), (t: Transaction), (subAccountDetails: AccountNameComponent list)) =
         new Account(this.fullName,
                     this.name,
                     this.sign,
@@ -155,9 +159,10 @@ type Account = struct
                                                                     PersistentDictionary.Empty,
                                                                     PersistentQueue.Empty,
                                                                     AUD 0)
-                                    let subAccount = subAccount.Book(p, subSubAccountDetails)
+                                    let subAccount = subAccount.Book(p, t, subSubAccountDetails)
                                     this.subAccounts.Add(subAccountName.canonical, subAccount)),
-                    this.postings.Enqueue(p),
+
+                    this.postings.Enqueue({posting=p; transaction=t}), /// XXX: Will change this to book only to relevant subaccount, not to both parent and subaccount.
                     (addAmounts this.balance p.amount))
       member this.find (accountDetails: AccountNameComponent list) : Account option =
         match accountDetails with
@@ -190,7 +195,7 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
     let accounts = accounts
     member this.Accounts = accounts
     /// Book postings to relevant account.
-    member this.Book (p: Posting) =
+    member this.Book ((p: Posting), (t: Transaction)) =
         let accountDetails = (splitAccountName p.account)
         match accountDetails with
             | []  -> raise (BadAccountName(p.account, "Empty name"))
@@ -199,10 +204,10 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
                                             accounts.[accountName.canonical]
                                           else
                                             new Account(accountName.input)
-                            new Accounts(accounts.Add(accountName.canonical, account.Book(p, subAccountDetails)))
+                            new Accounts(accounts.Add(accountName.canonical, account.Book(p, t, subAccountDetails)))
     /// Book all postings in transaction.
     member this.Book (t: Transaction) =
-        (List.fold (fun (accounts : Accounts) (p: Posting) -> (accounts.Book p))
+        (List.fold (fun (accounts : Accounts) (p: Posting) -> accounts.Book(p, t))
                    this
                    t.postings)
     /// Book a bunch of transactions to a pre-existing Accounts object
