@@ -7,6 +7,7 @@ open Misc
 open FParsec
 
 // XXX: Yuck! Can I do this without global state!
+// Yes: http://www.quanttec.com/fparsec/users-guide/parsing-with-user-state.html
 let mutable transactionId = 0
 let nextTransactionId () =
     transactionId <- transactionId + 1
@@ -101,6 +102,7 @@ let pInputFile =
 // Top-level parsing routine(s).
 let parseInputString str =
     resetTransactionId() // XXX: Yuck! Can I do this without global state!
+    // Yes: http://www.quanttec.com/fparsec/users-guide/parsing-with-user-state.html
     match run pInputFile str with
         | Success(result, _, _) -> ParseSuccess(result)
         | Failure(errorMessage, _, _) -> ParseError(errorMessage)
