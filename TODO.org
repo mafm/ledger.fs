@@ -1,5 +1,11 @@
 * ASAP
 
+* Parse errors don't produce proper error messages.
+
+  When I tried to run the executable on a file I actually wanted to
+  use, I got a parse error. That was correct, but info on where the
+  error was would obviously be useful.
+
 * Bugs
 ** DONE Accounts reported with "canonical", not "input" names
 
