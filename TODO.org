@@ -1,10 +1,22 @@
 * ASAP
 
-* Parse errors don't produce proper error messages.
+** Parse errors don't produce proper error messages.
 
   When I tried to run the executable on a file I actually wanted to
   use, I got a parse error. That was correct, but info on where the
-  error was would obviously be useful.
+  error was would obviously be useful. We need at least the line number....
+
+** When transactions don't balance, should report ALL of the problematic transactions.
+
+** Should be possible to get running balance even if assertions don't succeed.
+   Otherwise, how to debug the assertions?
+   Probably add an ignore-assertions flag.
+
+** If we get error opening excel output file:
+*** Don't crash - catch it
+    -  no such directory
+    - can't write to that file
+*** get that error after reading/validating the input
 
 * Bugs
 ** DONE Accounts reported with "canonical", not "input" names
@@ -32,6 +44,10 @@
 ** Better exception handling
    At the moment, we don't even handle missing input file exceptions.
 ** Reporting
+*** balances-by-date
+    Maybe put in a starting-balance to remove need to display
+    transactions before the first mentioned date? Could make it easier
+    to read once we have several years worth of data....
 *** Add from/to dates to register report
     If given a <start-date>, it should add all transactions from
     beginning, and then:
