@@ -13,7 +13,7 @@
    Probably add an ignore-assertions flag.
 
 ** If we get error opening excel output file:
-*** Don't crash - catch it
+*** DONE Don't crash - catch it
     -  no such directory
     - can't write to that file
 *** DONE get that error after reading/validating the input

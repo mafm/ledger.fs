@@ -161,7 +161,6 @@ let main argv =
     let firstDate = match (string arguments.["<first-date>"]) with | "" -> None | date -> Some date
     let lastDate = match (string arguments.["<last-date>"]) with | "" -> None | date -> Some date
     let input = (parseInputFile inputFileName)
-
     (validate input)
     let destination = ExcelOutput.destination(string arguments.["--excel-output"])
 
@@ -207,4 +206,8 @@ let main argv =
     |  UnableToParseFile(filename, message) ->
         fatal(sprintf "Error parsing input file '%s' : %s" filename message)
         -1
+    | :? System.IO.IOException as e ->
+        fatal(sprintf "IO error: %s" e.Message)
+        -1
+
     //demo()
