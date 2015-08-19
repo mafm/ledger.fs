@@ -156,12 +156,12 @@ let usage = """Ledger.fs: simple command-line double-entry accounting.
 let main argv =
     let arguments = DocoptNet.Docopt().Apply(usage, argv, exit=true)
     let inputFileName = (string arguments.["<input-filename>"])
-    let destination = ExcelOutput.destination(string arguments.["--excel-output"])
     let dates = ([for d in arguments.["<date>"].AsList -> (string d)] |> List.sort)
     let firstDate = match (string arguments.["<first-date>"]) with | "" -> None | date -> Some date
     let lastDate = match (string arguments.["<last-date>"]) with | "" -> None | date -> Some date
     let input = (parseInputFile inputFileName)
     (validate input)
+    let destination = ExcelOutput.destination(string arguments.["--excel-output"])
 
     if (arguments.["running-balance"].IsTrue) then
         let report = (ReportRegister.generateReport input (string arguments.["<account>"]))
