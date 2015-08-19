@@ -98,9 +98,9 @@ let validate (input: InputFile) =
         | [] -> ()
         | unbalanced ->
             for t in unbalanced do
-                (nonFatal (sprintf "Imbalance of %s in transaction dated %s (%s).\n"
+                (nonFatal (sprintf "Imbalance of %s in transaction dated %s (%s)."
                                 (Text.fmt (absAmount (balance t))) t.date t.description))
-                (fatal "Error in input file - unbalanced transactions.")
+            (fatal "Error in input file - unbalanced transactions.")
     (validateBalanceAssertions input)
 
 let demo () =
@@ -154,12 +154,14 @@ let usage = """Ledger.fs: simple command-line double-entry accounting.
 
 [<EntryPoint>]
 let main argv =
+  try
     let arguments = DocoptNet.Docopt().Apply(usage, argv, exit=true)
     let inputFileName = (string arguments.["<input-filename>"])
     let dates = ([for d in arguments.["<date>"].AsList -> (string d)] |> List.sort)
     let firstDate = match (string arguments.["<first-date>"]) with | "" -> None | date -> Some date
     let lastDate = match (string arguments.["<last-date>"]) with | "" -> None | date -> Some date
     let input = (parseInputFile inputFileName)
+
     (validate input)
     let destination = ExcelOutput.destination(string arguments.["--excel-output"])
 
@@ -200,7 +202,9 @@ let main argv =
         printf "Summary written to excel file."
 
     ExcelOutput.save(destination)
-
+    0
+  with
+    |  UnableToParseFile(filename, message) ->
+        fatal(sprintf "Error parsing input file '%s' : %s" filename message)
+        -1
     //demo()
-    //printfn "%A" argv
-    0 // return an integer exit code

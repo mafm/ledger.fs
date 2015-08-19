@@ -1,12 +1,12 @@
 * ASAP
 
-** Parse errors don't produce proper error messages.
+** DONE Parse errors don't produce proper error messages.
 
   When I tried to run the executable on a file I actually wanted to
   use, I got a parse error. That was correct, but info on where the
   error was would obviously be useful. We need at least the line number....
 
-** When transactions don't balance, should report ALL of the problematic transactions.
+** DONE When transactions don't balance, should report ALL of the problematic transactions.
 
 ** Should be possible to get running balance even if assertions don't succeed.
    Otherwise, how to debug the assertions?
