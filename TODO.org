@@ -8,16 +8,21 @@
 
 ** DONE When transactions don't balance, should report ALL of the problematic transactions.
 
-** Should be possible to get running balance even if assertions don't succeed.
+** TODO Should be possible to get running balance even if assertions don't succeed.
    Otherwise, how to debug the assertions?
    Probably add an ignore-assertions flag.
 
-** If we get error opening excel output file:
+   - Actually, if we're doing the report-balances thing, we could just
+     ignore verification errors - fixing a verify error is main reason
+     for running that report.
+
+** TODO If we get error opening excel output file:
 *** DONE Don't crash - catch it
     -  no such directory
     - can't write to that file
 *** DONE get that error after reading/validating the input
 
+*** TODO catch any other unhandled exceptions too..
 * Bugs
 ** DONE Accounts reported with "canonical", not "input" names
 
