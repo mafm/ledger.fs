@@ -8,3 +8,5 @@ obj
 packages
 *.cache
 *.swp
+*.xlsx
+ledger.py
