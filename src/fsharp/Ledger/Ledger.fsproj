@@ -55,6 +55,7 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
+    <Compile Include="FormatExceptionForDisplay.fs" />
     <Compile Include="Misc.fs" />
     <Compile Include="InputTypes.fs" />
     <Compile Include="Parse.fs" />

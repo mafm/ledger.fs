@@ -22,7 +22,13 @@
     - can't write to that file
 *** DONE get that error after reading/validating the input
 
-*** TODO catch any other unhandled exceptions too..
+*** DONE catch any other unhandled exceptions too..
+    CLOSED: [2016-03-05 Sat 12:41]
+    - State "DONE"       from "TODO"       [2016-03-05 Sat 12:41] \\
+      Now show stack & exception details when something goes wrong.
+
+      Not pretty, but at least should stop windows asking if we want to get
+      help with the program, or offering to attach debugger to it.
 * Bugs
 ** DONE Accounts reported with "canonical", not "input" names
 

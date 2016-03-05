@@ -28,10 +28,12 @@ open InternalTypes
 open Misc
 open TextOutput
 
+open FormatExceptionForDisplay
+
 exception UnableToParseFile of filename: string * message: string
 
 let fatal message =
-    printfn "Fatal error: %s" message
+    printfn "\nFatal error: %s" message
     // XXX/TODO: Should generally not delay, unless we know this was started outside
     //           of a shell window - which should not usually be the case.
     System.Environment.Exit 1
@@ -198,7 +200,6 @@ let main argv =
         ExcelOutput.Excel.write((ReportBalancesByDate.generateReport input dates), destination)
         ExcelOutput.Excel.write((ReportChartOfAccounts.generateReport input), destination)
         ExcelOutput.Excel.write((ReportTransactionList.generateReport input None lastDate), destination)
-        printf "Summary written to excel file."
 
     ExcelOutput.save(destination)
     0
@@ -209,5 +210,10 @@ let main argv =
     | :? System.IO.IOException as e ->
         fatal(sprintf "IO error: %s" e.Message)
         -1
+    | e ->
+        fatal (sprintf "\n%s" (e|>formatDisplayMessage))
+        -1
+
+
 
     //demo()
