@@ -197,6 +197,8 @@ let main argv =
         if dates.Length < 1 then
             fatal("summary requires at least one date.")
         let lastDate = Some (List.max dates)
+        ExcelOutput.Excel.write((ReportProfitAndLoss.generateReport input dates), destination)
+        ExcelOutput.Excel.write((ReportBalanceSheet.generateReport input dates), destination)
         ExcelOutput.Excel.write((ReportBalancesByDate.generateReport input dates), destination)
         ExcelOutput.Excel.write((ReportChartOfAccounts.generateReport input), destination)
         ExcelOutput.Excel.write((ReportTransactionList.generateReport input None lastDate), destination)

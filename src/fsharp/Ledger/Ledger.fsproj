@@ -25,7 +25,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Debug\Ledger.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
-    <StartArguments>../../../../../examples/sample.transactions  balances-by-date 2013-01-05 2013-01-10 2013-01-15</StartArguments>
+    <StartArguments>..\..\..\kapsia.transactions --excel=tmp/tmp summary 2013-06-30 2014-06-30 2014-12-31 2015-06-30 2015-12-31</StartArguments>
+    <StartWorkingDirectory>C:\Users\mafm\Desktop\working-directories\accounts\working-and-notes\2015-12-31\input-data\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -69,6 +70,8 @@
     <Compile Include="ReportTransactionList.fs" />
     <Compile Include="ReportBalances.fs" />
     <Compile Include="ReportBalancesByDates.fs" />
+    <Compile Include="ReportProfitAndLoss.fs" />
+    <Compile Include="ReportBalanceSheet.fs" />
     <Compile Include="ReportChartOfAccounts.fs" />
     <Compile Include="ExcelOutput.fs" />
     <Compile Include="Program.fs" />
