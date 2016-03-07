@@ -73,8 +73,8 @@ type Excel =
 
     static member depthLine((line : ReportBalancesByDate.Line)) =
         1 + (List.fold max 0 (List.map Excel.depthLine line.subAccounts))
-    /// How deeply are the accounts in this report nested?
 
+    /// How deeply are the accounts in this report nested?
     static member depth((report : ReportBalancesByDate.Report)) =
         (List.fold max 0 (List.map Excel.depthLine report.lines))
 
@@ -83,20 +83,22 @@ type Excel =
         let writePosting (d: PostingDetail) (nextRow: int) =
             setIndent ws nextRow (indent+1)
 
-            let mutable col = 1
+            let numDates = dates.Length
+            let mutable col = numDates
             for date in dates do
                 if d.transaction.date <= date then
                     Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
                     ws.Cells.[nextRow, col].Style.Font.Italic <- true
-                col <- col + 1
-            col <- col + 1
+                col <- col - 1
+
+            col <- (2*numDates)
             match dates with
             | first::rest -> let mutable prevDate = first
                              for date in rest do
                                 if ((prevDate < d.transaction.date) && (d.transaction.date <= date)) then
                                     Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
                                     ws.Cells.[nextRow, col].Style.Font.Italic <- true
-                                col <- col + 1
+                                col <- col - 1
                                 prevDate <- date
             | [] -> ()
 
@@ -117,16 +119,23 @@ type Excel =
             | first::rest ->
                 writePostings rest (writePosting first nextRow)
 
-        let mutable column = 1
+        let numDates = dates.Length
+        let mutable column = numDates
+
+        // Write as-at balances
         (setIndent ws nextRow indent)
         for balance in line.amounts.balances do
             (Excel.setValue (ws.Cells.[nextRow, column], balance))
-            column <- column + 1
-        column <- column + 1
-        for balance in line.amounts.differences do
-            (Excel.setValue (ws.Cells.[nextRow, column], balance))
-            column <- column + 1
-        column <- column + 1
+            column <- column - 1
+
+        // Write differences between dates
+        column <- (numDates * 2)
+        for difference in line.amounts.differences do
+            (Excel.setValue (ws.Cells.[nextRow, column], difference))
+            column <- column - 1
+
+        column <- 2*(numDates+1)
+
         Excel.setValue (ws.Cells.[nextRow, column+indent], line.account)
         let rowAfterChildren = Excel.writeLines (line.subAccounts, dates, ws, indent+1, (nextRow+1), txnCol)
         let rowAfterPostings = (writePostings line.postings rowAfterChildren)
@@ -139,18 +148,29 @@ type Excel =
             | first::rest -> Excel.writeLines(rest, dates, ws, indent, Excel.writeLine(first, dates, ws, indent, nextRow, txnCol), txnCol)
 
     static member write((report : ReportBalancesByDate.Report), (destination : Destination)) =
+        let numDates = report.dates.Length
+
+        let dateIndexToBalanceColumn i =
+            numDates-i
+
+        let dateIndexToChangeColumn i =
+            (2*numDates) + 1 - i
+
         match destination with
             | None  -> ()
             | Some package ->
-                let numDates = report.dates.Length
+
                 let accountDepth = Excel.depth(report)
                 let worksheet = package.Workbook.Worksheets.Add("Balances by Date")
+
                 (setHeader worksheet.Cells.[1, 1] "Balance")
-                for i in 1 .. numDates do
-                    (setHeader worksheet.Cells.[2, i] report.dates.[i-1])
+                for i in 0 .. (numDates-1) do
+                    (setHeader worksheet.Cells.[2, dateIndexToBalanceColumn(i)] report.dates.[i])
+
                 (setHeader worksheet.Cells.[1, numDates+2] "Change")
-                for i in 2 .. numDates do
-                    (setHeader worksheet.Cells.[2, numDates+i] report.dates.[i-1])
+                for i in 1 .. (numDates-1) do
+                    (setHeader worksheet.Cells.[2, dateIndexToChangeColumn(i)] report.dates.[i])
+
                 (setHeader worksheet.Cells.[2, numDates*2+2] "Account")
 
                 let txnNumCol = numDates*2+2+accountDepth

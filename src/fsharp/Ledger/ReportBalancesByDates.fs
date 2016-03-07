@@ -53,9 +53,10 @@ let rec differences (amounts: Amount list) =
 let rec constructReportBalancesByDateLine (accounts : Account option List) (accountTree : AccountNameTree) =
     let balances =
         (List.map (fun (a : Account option) ->
-             match a with
-             | Some account -> account.balance
-             | None -> zeroAmount) accounts)
+                        match a with
+                        | Some account -> account.balance
+                        | None -> zeroAmount)
+                  accounts)
     { account = (Text.fmt accountTree.name)
       amounts =
           { balances = balances
