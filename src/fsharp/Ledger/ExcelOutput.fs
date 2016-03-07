@@ -334,22 +334,25 @@ type Excel =
             | first::rest ->
                 writePostings rest (writePosting first nextRow)
 
+        let rowAfterChildren = Excel.writeLines (line.SubAccounts, dates, ws, indent+1, (nextRow), txnCol)
+        let rowAfterPostings = (writePostings line.Postings rowAfterChildren)
+
         let numDates = dates.Length
         let mutable column = numDates
 
+        (setIndent ws rowAfterPostings indent)
         // Write differences to date
-        (setIndent ws nextRow indent)
         for difference in line.Amounts.Differences do
-            (Excel.setValue (ws.Cells.[nextRow, column], difference))
+            (Excel.setValue (ws.Cells.[rowAfterPostings, column], difference))
             column <- column - 1
 
         column <- (numDates+2)
 
-        Excel.setValue (ws.Cells.[nextRow, column+indent], line.Account)
-        let rowAfterChildren = Excel.writeLines (line.SubAccounts, dates, ws, indent+1, (nextRow+1), txnCol)
-        let rowAfterPostings = (writePostings line.Postings rowAfterChildren)
-        (collapse ws nextRow)
-        rowAfterPostings
+        Excel.setValue (ws.Cells.[rowAfterPostings, column+indent], line.Account)
+
+
+        (collapse ws rowAfterPostings)
+        rowAfterPostings+1
 
     static member writeLines((lines : ReportProfitAndLoss.Line list), (dates: Date list), (ws : ExcelWorksheet),  (indent: int), (nextRow: int), (txnCol:int)) =
         match lines with
@@ -383,7 +386,7 @@ type Excel =
 
                 Excel.writeLines(report.Lines, report.Dates, worksheet,  0, 2, txnNumCol) |> ignore
                 worksheet.View.FreezePanes(2, 1)
-                worksheet.OutLineSummaryBelow <- false
+                worksheet.OutLineSummaryBelow <- true
                 for c in 1..numDates do
                     worksheet.Column(c).AutoFit(0.0)
                 for c in (numDates+2)..(numDates*2) do
