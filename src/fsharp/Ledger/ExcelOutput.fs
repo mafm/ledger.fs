@@ -241,19 +241,21 @@ type Excel =
         let numDates = dates.Length
         let mutable column = numDates
 
+        let rowAfterChildren = Excel.writeLines (line.subAccounts, dates, ws, indent+1, nextRow, txnCol)
+        let rowAfterPostings = (writePostings line.postings rowAfterChildren)
+
         // Write as-at balances
-        (setIndent ws nextRow indent)
+        (setIndent ws rowAfterPostings indent)
         for balance in line.amounts.balances do
-            (Excel.setValue (ws.Cells.[nextRow, column], balance))
+            (Excel.setValue (ws.Cells.[rowAfterPostings, column], balance))
             column <- column - 1
 
         column <- (numDates+2)
 
-        Excel.setValue (ws.Cells.[nextRow, column+indent], line.account)
-        let rowAfterChildren = Excel.writeLines (line.subAccounts, dates, ws, indent+1, (nextRow+1), txnCol)
-        let rowAfterPostings = (writePostings line.postings rowAfterChildren)
-        (collapse ws nextRow)
-        rowAfterPostings
+        Excel.setValue (ws.Cells.[rowAfterPostings, column+indent], line.account)
+
+        (collapse ws rowAfterPostings)
+        rowAfterPostings+1
 
     static member writeLines((lines : ReportBalanceSheet.Line list), (dates: Date list), (ws : ExcelWorksheet),  (indent: int), (nextRow: int), (txnCol:int)) =
         match lines with
@@ -287,7 +289,7 @@ type Excel =
 
                 Excel.writeLines(report.lines, report.dates, worksheet,  0, 2, txnNumCol) |> ignore
                 worksheet.View.FreezePanes(2, 1)
-                worksheet.OutLineSummaryBelow <- false
+                worksheet.OutLineSummaryBelow <- true
                 for c in 1..numDates do
                     worksheet.Column(c).AutoFit(0.0)
                 for c in (numDates+2)..(numDates*2) do
