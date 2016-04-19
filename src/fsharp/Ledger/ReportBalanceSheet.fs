@@ -64,13 +64,16 @@ let rec constructReportBalanceSheetLine (accounts : Account option List) (accoun
                 (constructReportBalanceSheetLine [ for a in accounts -> (extractSubAccount a child.Name) ] child) ]
       Postings = accountTree.Postings }
 
-let addLine (name: InputNameAccount) (accounts: DatedAccounts) (dates: Date list) linesSoFar =
+let addLine (name: InputNameAccount) (accounts: DatedAccounts) (dates: Date list) (linesSoFar : List<Line>) =
     let lastDate = (List.max dates)
     let finalAccounts = accounts.[lastDate] in
     match finalAccounts.find(name)  with
-        | Some finalAccount -> ((constructReportBalanceSheetLine (List.map (fun date -> accounts.[date].find(name)) dates)
-                                                                 (constructAccountNameTree finalAccount))
-                                :: linesSoFar)
+        | Some finalAccount ->
+            let accountTree = (constructAccountNameTree finalAccount)
+            let accountsAtDates = (List.map (fun date -> accounts.[date]) dates)
+            let accountNamedInTreeAtDates = (List.map (fun (accounts:Accounts) -> accounts.find(accountTree.Name)) accountsAtDates)
+            let newLine = (constructReportBalanceSheetLine accountNamedInTreeAtDates accountTree)
+            ( newLine :: linesSoFar)
         | None -> linesSoFar
 
 let generateReport (input: InputFile) (dates: Date list)  =

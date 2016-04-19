@@ -74,7 +74,6 @@ let addLine (name: InputNameAccount) (accounts: DatedAccounts) (dates: Date list
         | Some finalAccount ->
             let accountTree = (constructAccountNameTree finalAccount)
             let accountsAtDates = (List.map (fun date -> accounts.[date]) dates)
-            // XXX: Now need to find 'accountTree' under account.
             let accountNamedInTreeAtDates = (List.map (fun (accounts:Accounts) -> accounts.find(accountTree.Name)) accountsAtDates)
             ((constructReportBalancesByDateLine accountNamedInTreeAtDates accountTree) :: linesSoFar)
         | None -> linesSoFar
