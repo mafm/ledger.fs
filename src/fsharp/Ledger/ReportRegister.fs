@@ -19,14 +19,14 @@ type Line = {date: Date
              description: Description
              // In transactions often post to a sub-account of target a/c.
              // Record the (sub-)account actually posted to.
-             account: AccountName}
+             account: InputNameAccount}
 
-type Report = {account: AccountName
+type Report = {account: InputNameAccount
                from: Date option
                until: Date option
                lines: Line list}
 
-let helpPosting (p:Posting) (account:AccountName) openingBalance (date: Date) (description : Description) (linesSoFar: PersistentQueue<Line>) =
+let helpPosting (p:Posting) (account:InputNameAccount) openingBalance (date: Date) (description : Description) (linesSoFar: PersistentQueue<Line>) =
     if   (isSubAccountOf p.account account) then
         let newBalance = (addAmounts openingBalance p.amount) in
             ((linesSoFar.Enqueue {date=date;
@@ -39,23 +39,23 @@ let helpPosting (p:Posting) (account:AccountName) openingBalance (date: Date) (d
     else
         (linesSoFar, openingBalance)
 
-let rec helpPostings (p:Posting list) (account:AccountName) openingBalance (date: Date) (description : Description) (linesSoFar: PersistentQueue<Line>) =
+let rec helpPostings (p:Posting list) (account:InputNameAccount) openingBalance (date: Date) (description : Description) (linesSoFar: PersistentQueue<Line>) =
     match p with
     | [] -> (linesSoFar, openingBalance)
     | p::rest ->
         let (newLines, newBalance) = helpPosting p account openingBalance date description linesSoFar in
         helpPostings rest account newBalance date description newLines
 
-let helpTransaction (t: Transaction) (account:AccountName) openingBalance (linesSoFar: PersistentQueue<Line>) =
-    helpPostings t.postings (account:AccountName) openingBalance t.date t.description (linesSoFar: PersistentQueue<Line>)
+let helpTransaction (t: Transaction) (account:InputNameAccount) openingBalance (linesSoFar: PersistentQueue<Line>) =
+    helpPostings t.postings (account:InputNameAccount) openingBalance t.date t.description (linesSoFar: PersistentQueue<Line>)
 
-let rec helpTransactions (t: Transaction list) (account:AccountName) openingBalance (linesSoFar: PersistentQueue<Line>) =
+let rec helpTransactions (t: Transaction list) (account:InputNameAccount) openingBalance (linesSoFar: PersistentQueue<Line>) =
     match t with
     | [] -> (linesSoFar, openingBalance)
     | t::rest -> let (newLines, newBalance) = helpTransaction t account openingBalance linesSoFar in
                  helpTransactions rest account newBalance newLines
 
-let generateReport (input: InputFile) (account: AccountName) =
+let generateReport (input: InputFile) (account: InputNameAccount) =
     let (lines, finalBalance) = helpTransactions (transactions input) account zeroAmount PersistentQueue.Empty
     {account = account;
      from = None;
@@ -66,7 +66,7 @@ let printRegisterReportLine line =
     printf "%s\t" line.date
     printf "%s\t" (Text.fmt line.amount)
     printf "%s\t" (Text.fmt line.balance)
-    printf "%s\t" line.account
+    printf "%s\t" line.account.AsString
     printf "%s\n" line.description
 
 let printRegisterReport report =

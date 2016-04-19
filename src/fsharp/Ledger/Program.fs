@@ -53,7 +53,7 @@ let validateAccountNames (transactions: Transaction List) =
         for p in t.postings do
             if not (validAccountName p.account) then
                 (nonFatal (sprintf "Invalid account name '%s' in transaction dated %s (%s)."
-                                p.account t.date t.description))
+                                p.account.AsString t.date t.description))
                 allOk <- false
     if not allOk then
         (fatal "Error in input file - invalid account name(s).")
@@ -65,21 +65,21 @@ let validateBalanceAssertions input =
     let accountsByDate = (accountsByDate input dates) in
         for assertion in assertions do
             if not (validAccountName assertion.account) then
-                (nonFatal (sprintf "Error in verify-balance dated %s - invalid account '%s'." assertion.date assertion.account))
+                (nonFatal (sprintf "Error in verify-balance dated %s - invalid account '%s'." assertion.date assertion.account.AsString))
                 allOk <- false
             else
                 match accountsByDate.[assertion.date].find(assertion.account) with
                 | None ->
                         (nonFatal (sprintf "Error in verify-balance. Account '%s' has no bookings at date %s."
-                                                    assertion.account assertion.date))
+                                                    assertion.account.AsString assertion.date))
                         allOk <- false
                 | Some account ->
-                       if account.balance <> assertion.amount then
+                       if account.Balance <> assertion.amount then
                             (nonFatal (sprintf "Error in verify-balance. Expected balance of '%s' at %s: %s actual balance: %s"
-                                            assertion.account
+                                            assertion.account.AsString
                                             assertion.date
                                             (Text.fmt assertion.amount)
-                                            (Text.fmt account.balance)))
+                                            (Text.fmt account.Balance)))
                             allOk <- false
             if not allOk then
                 (fatal "Error in input file - incorrect verify-balance assertion(s).")
@@ -111,7 +111,7 @@ let demo () =
         let input = parseInputFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
             (validate input)
             printfn "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
-            let report = (ReportRegister.generateReport input "Expenses") in do
+            let report = (ReportRegister.generateReport input (InputName "Expenses")) in do
                 printf "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
                 (printf "\nDEMO: EXPENSES REGISTER\n")
                 (ReportRegister.printRegisterReport report)
@@ -167,7 +167,7 @@ let main argv =
     let destination = ExcelOutput.destination(string arguments.["--excel-output"])
 
     if (arguments.["running-balance"].IsTrue) then
-        let report = (ReportRegister.generateReport input (string arguments.["<account>"]))
+        let report = (ReportRegister.generateReport input (InputName (string arguments.["<account>"])))
         (ReportRegister.printRegisterReport report)
         ExcelOutput.Excel.write(report, destination)
 

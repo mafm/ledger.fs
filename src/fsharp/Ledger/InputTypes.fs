@@ -4,12 +4,17 @@
 //
 // This began life as a rewrite of python code, so any static typing here is better than that.
 
-exception BadAccountName of name: string * problem: string
-
+/// XXX: While I'm making the name parts newtypes (single-discriminated-unions), I should probably
+/// make Date/Description newtypes too....
 type Date = string
 type Description = string
 
-type AccountName = string
+type InputNameAccount = InputName of string
+    with
+        member this.AsString =
+            match this with (InputName x) -> x
+
+exception BadAccountNameException of name: InputNameAccount * problem: string
 
 type Amount =
     /// AUD amounts are stored as cents, and converted to dollars on input/output.
@@ -30,7 +35,7 @@ let absAmount (a: Amount) =
     match a with
     | AUD a -> AUD (abs a)
 
-type Posting = { account: AccountName
+type Posting = { account: InputNameAccount
                  amount:  Amount}
 
 type Transaction = { date:    Date
@@ -39,7 +44,7 @@ type Transaction = { date:    Date
                      id: int}
 
 type BalanceVerfication = { date:    Date
-                            account: AccountName
+                            account: InputNameAccount
                             amount: Amount}
 
 type Input =

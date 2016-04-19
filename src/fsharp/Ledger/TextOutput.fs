@@ -9,13 +9,15 @@ open InputTypes
 open InternalTypes
 
 type Text =
-    static member fmt (x:AccountNameComponents) =
+    static member fmt (x:InternalNameAccount) =
         match x with
         | last::[] ->
-            (sprintf "%s" last.input)
+            match last.Input with
+                (Input name) -> (sprintf "%s" name)
         | first::rest ->
-            (sprintf "%s:%s" first.input (Text.fmt rest))
-        | [] -> raise EmptyAccountNameComponents
+            match first.Input with
+                (Input name) -> (sprintf "%s:%s" name (Text.fmt rest))
+        | [] -> raise EmptyAccountNameComponentsException
     static member fmt (x: Amount) =
         match x with
         | AUD 0 -> "-"
@@ -24,5 +26,5 @@ type Text =
     // argument types to each are identical as far as the compiler
     // is concerned, so we use method name to disambiguate.
     static member fmtDate (x: Date) = (sprintf "%s" x)
-    static member fmtAccountName (x: AccountName) = (sprintf "%s" x)
+    static member fmtAccountName (x: InputNameAccount) = (x.AsString)
     static member fmtTxnId (i: int) = (sprintf "txn:%d" i)

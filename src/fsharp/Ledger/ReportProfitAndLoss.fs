@@ -15,13 +15,13 @@ type Amounts = {
         // First difference is just the first amount, after that, it's the change between amounts.
         Differences : Amount list}
 
-type Line = { Account: AccountName
+type Line = { Account: InputNameAccount
               Amounts: Amounts
               SubAccounts: Line list
               Postings: PostingDetail list}
 
-type Report = {Dates: Date list
-               Lines: Line list}
+type Report = { Dates: Date list
+                Lines: Line list}
 
 type DatedAccounts = PersistentDictionary<Date, Accounts>
 
@@ -30,11 +30,11 @@ type DatedAccounts = PersistentDictionary<Date, Accounts>
 let extractBalance (a: Account option) =
     match a with
     | None -> zeroAmount
-    | Some a -> a.balance
+    | Some a -> a.Balance
 
 /// Can't I do this without a helper function?
 /// XXX: duplicate code!
-let extractSubAccount (a: Account option) (subAccountName: AccountNameComponents)=
+let extractSubAccount (a: Account option) (subAccountName: InternalNameAccount)=
     match a with
     | None -> None
     | Some a -> (a.find subAccountName)
@@ -58,38 +58,38 @@ let rec constructReportProfitAndLossLine (accounts : Account option List) (accou
     let balances =
         (List.map (fun (a : Account option) ->
                         match a with
-                        | Some account -> account.balance
+                        | Some account -> account.Balance
                         | None -> zeroAmount)
                   accounts)
-    { Account = (Text.fmt accountTree.name)
+    { Account = (InputName (Text.fmt accountTree.Name))
       Amounts =
           { Differences = (differences balances) }
       SubAccounts =
-          [ for child in accountTree.children ->
-                (constructReportProfitAndLossLine [ for a in accounts -> (extractSubAccount a child.name) ] child) ]
-      Postings = accountTree.postings }
+          [ for child in accountTree.Children ->
+                (constructReportProfitAndLossLine [ for a in accounts -> (extractSubAccount a child.Name) ] child) ]
+      Postings = accountTree.Postings }
 
-let addLine (name: AccountName) (accounts: DatedAccounts) (dates: Date list) linesSoFar =
+let addLine (name: InputNameAccount) (accounts: DatedAccounts) (dates: Date list) linesSoFar =
     let lastDate = (List.max dates)
     let finalAccounts = accounts.[lastDate] in
     match finalAccounts.find(name)  with
         | Some finalAccount -> ((constructReportProfitAndLossLine (List.map (fun date -> accounts.[date].find(name)) dates)
-                                                                   (constructAccountNameTree finalAccount finalAccount.name))
+                                                                  (constructAccountNameTree finalAccount))
                                 :: linesSoFar)
         | None -> linesSoFar
 
 let generateReport (input: InputFile) (dates: Date list)  =
     let datedAccounts = (accountsByDate input dates)
     {Dates = dates;
-     Lines = (addLine "Income" datedAccounts dates
-             (addLine "Expenses" datedAccounts dates []))}
+     Lines = (addLine (InputName "Income") datedAccounts dates
+             (addLine (InputName "Expenses") datedAccounts dates []))}
 
 let rec printReportLine indent (line : Line) =
     for difference in line.Amounts.Differences do
         printf "%s\t" (Text.fmt difference)
     for i in 1 .. indent do
         printf " "
-    printf "%s\n" line.Account
+    printf "%s\n" line.Account.AsString
     for subLine in line.SubAccounts do
         printReportLine (indent+2) subLine
 

@@ -3,7 +3,7 @@
 open InputTypes
 open PersistentCollections
 
-exception EmptyAccountNameComponents
+exception EmptyAccountNameComponentsException
 
 type AccountType =
     | Asset
@@ -23,11 +23,11 @@ let sign (accountType: AccountType) =
     | Equity -> -1
 
 /// Which of the five basic account types is this?
-let accountType (name : AccountName) =
+let accountType (InputName name) =
     let components = name.ToUpper().Split(':') |> Array.toList
     let root = match components with
                     | root::tail -> root
-                    | _ -> raise (BadAccountName(name, "Empty name"))
+                    | _ -> raise (BadAccountNameException((InputName name), "Empty name"))
     match root with
     | "ASSET"       -> Asset
     | "ASSETS"      -> Asset
@@ -39,46 +39,76 @@ let accountType (name : AccountName) =
     | "EXPENSE"     -> Expense
     | "EXPENSES"    -> Expense
     | "EQUITY"      -> Equity
-    | _             -> raise (BadAccountName(name, "Unable to determine account type"))
+    | _             -> raise (BadAccountNameException((InputName name), "Unable to determine account type"))
 
 /// Do we have a valid account name?
-let validAccountName (a:AccountName) =
+let validAccountName (a:InputNameAccount) =
     try
         match (accountType a) with _ -> true
-    with BadAccountName(name, problem) -> false
+    with BadAccountNameException(name, problem) -> false
+
+type CanonicalNameComponent = Canonical of string
+type InputNameComponent = Input of string
+    with
+        member this.AsInputName =
+            match this with (Input str) -> (InputName str)
+
+type AccountNameComponent = {
+    Canonical: CanonicalNameComponent;
+    Input: InputNameComponent}
+
+type InternalNameAccount = AccountNameComponent list
+
+let toInputName (name: InternalNameAccount) : InputNameAccount =
+    let rec helper (name: InternalNameAccount) =
+        match name with
+        | [] -> 
+            ""
+        | only::[] -> match (only.Input) with
+                            (Input only) -> only
+        | first::rest -> match (first.Input) with
+                            (Input first) -> first + ":"+(helper rest)
+    (InputName (helper name))
 
 let canonicalRootName name =
     let accountType = accountType name
-    match accountType with
-    | Asset -> "ASSETS"
-    | Liability -> "LIABILITY"
-    | Income -> "INCOME"
-    | Expense -> "EXPENSE"
-    | Equity -> "EQUITY"
-
-
-
-type AccountNameComponent = {
-    canonical: string;
-    input: string}
-
-type AccountNameComponents = AccountNameComponent list
+    (Canonical (match accountType with
+                | Asset -> "ASSETS"
+                | Liability -> "LIABILITY"
+                | Income -> "INCOME"
+                | Expense -> "EXPENSE"
+                | Equity -> "EQUITY"))
 
 /// Break AccountName into ordered list of components.
 /// For each level of the account, we produce canonical & input components.
 /// Checkout out unit test for an example of what this does.
-let splitAccountName (name: AccountName) =
+let splitAccountName (InputName name) : InternalNameAccount =
         let components = name.Split(':') |> Array.toList
         let rec helper (components: string list) =
             match components with
             | [] -> []
-            | first::rest -> {canonical = first.ToUpper(); input = first} :: (helper rest)
+            | first::rest -> {Canonical = (Canonical (first.ToUpper())); Input = (Input first)} :: (helper rest)
         match components with
-            | root::rest -> {canonical = (canonicalRootName name); input = root} :: (helper rest)
-            | [] -> raise (BadAccountName(name, "Empty name"))
+            | root::rest -> {Canonical = (canonicalRootName (InputName name)); Input = (Input root)} :: (helper rest)
+            | [] -> raise (BadAccountNameException((InputName name), "Empty name"))
+
+
+type InputNameAccount 
+    with
+        member this.LastName =
+            let name = (splitAccountName this)
+            let reversed = List.rev name
+            match reversed with
+            | last :: _ -> last
+            | [] -> raise (BadAccountNameException(this, "Empty account name"))
+
+let joinInputNames (InputName parentName) (Input childName) =
+    (InputName (parentName + ":" + childName))
+
+
 /// Canonical parts of splitAccountName
-let canonicalAccountName (name: AccountName) =
-    (List.map (fun x -> x.canonical) (splitAccountName name))
+let canonicalAccountName (name: InputNameAccount) =
+    (List.map (fun x -> x.Canonical) (splitAccountName name))
 
 /// When we record a posting, we will often want the transaction it was part of for later reports.
 type PostingDetail = { posting: Posting
@@ -103,7 +133,8 @@ type Account = struct
       ///
       /// When generating reports, we aim to use the first spelling of
       /// the name seen in the input file.
-      val fullName: string
+      val FullInputName: InputNameAccount
+
       /// The short (sub-account) name of this account as presented to user.
       ///
       /// For example, an Account with fullName "Expenses:BankFees:AccountServiceFee",
@@ -111,68 +142,80 @@ type Account = struct
       ///
       /// XXX: The name field is redundant - we can easily get it from fullName.
       ///      Is it actually useful?
-      val name: string
+      val LastName: AccountNameComponent
+
       // How do balances in this account count against balances in other accounts?
-      val sign: int
+      val Sign: int
+
       /// Balances of sub-accounts contribute to balance of containing account.
-      val subAccounts: PersistentDictionary<string, Account>
+      val SubAccounts: PersistentDictionary<CanonicalNameComponent, Account>
+
       /// Amounts in postings contribute to balance of account they are posted to.
-      val postings: PersistentQueue<PostingDetail>
+      val Postings: PersistentQueue<PostingDetail>
+
       /// Balance is the sum of direct postings and balances of sub-accounts.
-      val balance: Amount
-      private new (fullName: string,
-                   name: string,
+      val Balance: Amount
+
+      private new (fullName:  InputNameAccount,
                    sign: int,
-                   subAccounts: PersistentDictionary<string, Account>,
+                   subAccounts: PersistentDictionary<CanonicalNameComponent, Account>,
                    postings: PersistentQueue<PostingDetail>,
-                   balance: Amount) = {fullName = fullName;
-                                       name = name;
-                                       sign = sign;
-                                       subAccounts = subAccounts;
-                                       postings = postings;
-                                       balance = balance}
-      new (fullName: string) =
-        let name = match (fullName.Split(':') |> Array.toList |> List.rev) with
-                    | name :: _ -> name
-                    | [] -> raise (BadAccountName(fullName, "Empty name"))
+                   balance: Amount) =
+        { FullInputName = fullName;
+          LastName = fullName.LastName;
+          Sign = sign;
+          SubAccounts = subAccounts;
+          Postings = postings;
+          Balance = balance}
+      new (fullName: InputNameAccount) =
         let sign = sign (accountType fullName)
-        new Account(fullName, name, sign,
+        new Account(fullName,
+                    sign,
                     PersistentDictionary.Empty,
                     PersistentQueue.Empty,
                     AUD 0)
       /// Add posting to this.postings,
       /// add posting.amount to this.balance, and
       /// book posting to relevant sub-account.
+
+      member this.HasChild(name : CanonicalNameComponent) = this.SubAccounts.ContainsKey(name)
+
+      member this.GetChild(name : CanonicalNameComponent) = this.SubAccounts.[name]
+
+      member this.AddSubAccount ((name : CanonicalNameComponent), (a: Account)) =
+        this.SubAccounts.Add(name, a)
+
       member this.Book ((p: Posting), (t: Transaction), (subAccountDetails: AccountNameComponent list)) =
-        new Account(this.fullName,
-                    this.name,
-                    this.sign,
+        new Account(this.FullInputName,
+                    this.Sign,
                     (match subAccountDetails with
-                            | [] -> this.subAccounts
+                            | [] -> this.SubAccounts
                             | subAccountName::subSubAccountDetails ->
-                                    let subAccount = if this.subAccounts.ContainsKey(subAccountName.canonical) then
-                                                        this.subAccounts.[subAccountName.canonical]
+                                    let subAccount = if this.HasChild(subAccountName.Canonical) then
+                                                        this.GetChild(subAccountName.Canonical)
                                                      else
-                                                        new Account(this.fullName + ":" + subAccountName.input,
-                                                                    subAccountName.input,
-                                                                    this.sign,
+                                                        new Account((joinInputNames this.FullInputName subAccountName.Input),                                                                    
+                                                                    this.Sign,
                                                                     PersistentDictionary.Empty,
                                                                     PersistentQueue.Empty,
                                                                     AUD 0)
                                     let subAccount = subAccount.Book(p, t, subSubAccountDetails)
-                                    this.subAccounts.Add(subAccountName.canonical, subAccount)),
+                                    this.AddSubAccount(subAccountName.Canonical, subAccount)),
                     (match subAccountDetails with
-                            | [] -> this.postings.Enqueue({posting=p; transaction=t})
-                            | _ ->  this.postings),
-                    (addAmounts this.balance p.amount))
+                            | [] -> this.Postings.Enqueue({posting=p; transaction=t})
+                            | _ ->  this.Postings),
+                    (addAmounts this.Balance p.amount))
       member this.find (accountDetails: AccountNameComponent list) : Account option =
         match accountDetails with
             | []  -> Some this
             | subAccountName::subSubAccountDetails ->
-                if this.subAccounts.ContainsKey(subAccountName.canonical) then
-                    (this.subAccounts.[subAccountName.canonical].find subSubAccountDetails)
+                if this.HasChild(subAccountName.Canonical) then
+                    (this.GetChild(subAccountName.Canonical).find subSubAccountDetails)
                 else
                     None
+      member this.SubAccountsOrderedByInputName =
+        let namesAndAccounts = (this.SubAccounts |> Seq.sortBy (fun (KeyValue(_,account)) -> account.LastName.Input))
+        [for KeyValue(_, account) in namesAndAccounts -> account]        
     end
 
 /// A "set" of accounts - ie
@@ -192,20 +235,23 @@ type Account = struct
 /// When generating reports, we should should be able to cope with some of the
 /// basic account types being absent - it's not really a big issue...
 
-type Accounts private (accounts: PersistentDictionary<string, Account>) =
+type Accounts private (accounts: PersistentDictionary<CanonicalNameComponent, Account>) =
     let accounts = accounts
+    member this.HasChild(name : CanonicalNameComponent) = accounts.ContainsKey(name)
+    member this.GetChild(name : CanonicalNameComponent) = accounts.[name]
+    member this.AddSubAccount ((name : CanonicalNameComponent), (a: Account)) = accounts.Add(name, a)
     member this.Accounts = accounts
     /// Book postings to relevant account.
     member this.Book ((p: Posting), (t: Transaction)) =
         let accountDetails = (splitAccountName p.account)
         match accountDetails with
-            | []  -> raise (BadAccountName(p.account, "Empty name"))
+            | []  -> raise (BadAccountNameException(p.account, "Empty name"))
             | accountName::subAccountDetails ->
-                            let account = if accounts.ContainsKey(accountName.canonical) then
-                                            accounts.[accountName.canonical]
+                            let account = if this.HasChild(accountName.Canonical) then
+                                            this.GetChild(accountName.Canonical)
                                           else
-                                            new Account(accountName.input)
-                            new Accounts(accounts.Add(accountName.canonical, account.Book(p, t, subAccountDetails)))
+                                            new Account((toInputName [accountName]))
+                            new Accounts(this.AddSubAccount(accountName.Canonical, account.Book(p, t, subAccountDetails)))
     /// Book all postings in transaction.
     member this.Book (t: Transaction) =
         (List.fold (fun (accounts : Accounts) (p: Posting) -> accounts.Book(p, t))
@@ -218,17 +264,18 @@ type Accounts private (accounts: PersistentDictionary<string, Account>) =
             | [] -> accounts
             | t::transactions -> (helper (accounts.Book t) transactions)
         (helper this transactions)
+
     // Given an account name, find the account
-    member this.find (name: AccountNameComponents) =
+    member this.find (name: InternalNameAccount) =
         match name with
-            | []  -> raise EmptyAccountNameComponents
-            | accountName::subAccountDetails ->
-                if accounts.ContainsKey(accountName.canonical) then
-                    (accounts.[accountName.canonical].find subAccountDetails)
+            | []  -> raise EmptyAccountNameComponentsException
+            | accountName::subAccountName ->
+                if this.HasChild(accountName.Canonical) then
+                    (this.GetChild(accountName.Canonical).find subAccountName)
                 else
                     None
     // Given an account name, find the account
-    member this.find (account: AccountName) =
+    member this.find (account: InputNameAccount) =
         (this.find (splitAccountName account))
     // NB: primary constructor is private. The public constructors are below.
     new () = Accounts(PersistentDictionary.Empty)

@@ -65,14 +65,14 @@ let filter (transactions : Transaction list) (first : Date option) (last : Date 
     transactions
 
 // Is a a sub-account of b?
-let isSubAccountOf (a: AccountName) (b: AccountName) =
+let isSubAccountOf (a: InputNameAccount) (b: InputNameAccount) =
     startsWith (canonicalAccountName a) (canonicalAccountName b)
 
 /// XXX: affectedBy(Posting/Transaction) should be a method on AccountName, which should be a class. Do we even need these at all?
-let postingAffects (p:Posting) (a: AccountName) =
+let postingAffects (p:Posting) (a: InputNameAccount) =
     (isSubAccountOf p.account a)
 /// XXX: affectedBy(Posting/Transaction) should be a method on AccountName, which should be a class. Do we even need these at all?
-let transactionAffects (t: Transaction) (a: AccountName) =
+let transactionAffects (t: Transaction) (a: InputNameAccount) =
     let rec helper postings =
         match postings with
             | p::postings -> match (postingAffects p a) with
@@ -86,25 +86,23 @@ let transactionAffects (t: Transaction) (a: AccountName) =
 /// them. Typically the last set of accounts will contain all the ones we want to visit. Here's
 /// a way of specifying the map of accounts we want to traverse.
 /// (There must be a better name for this type.)
-type AccountNameTree = { name: AccountNameComponents;
-                         children: AccountNameTree list;
-                         postings: PostingDetail List}
+type AccountNameTree = { Name:     InternalNameAccount;
+                         Children: AccountNameTree list;
+                         Postings: PostingDetail List}
 
 // Given an account (and it's canonical name), construct the tree of account names rooted at the account.
 // Here's the only real trick in the whole system:
 // If an account has no postings of its own and exactly one sub-account, we treat the subaccount as the
 // account. This produces neater reports - especially in text.
-let rec constructAccountNameTree (a: Account) (canonicalName: string) =
-    let subAccountsWithCNames = [for KeyValue(cName, subAccount) in
-                                    (a.subAccounts |> Seq.sortBy (fun (KeyValue(k,v)) -> v.name))
-                                 -> (subAccount, cName)]
-    match subAccountsWithCNames with
-        | [(onlyChild, onlyChildCName)] when (a.postings = PersistentQueue.Empty)
-            -> let childTree = (constructAccountNameTree onlyChild onlyChildCName)
-               {childTree with name = ({canonical = canonicalName; input = a.name}::childTree.name)}
-        | _ -> {name = [{canonical = canonicalName; input = a.name}];
-                children = [for (subAccount, cName) in subAccountsWithCNames -> (constructAccountNameTree subAccount cName)];
-                postings =  (List.ofSeq a.postings)}
+let rec constructAccountNameTree (a: Account) =
+    let subAccounts = a.SubAccountsOrderedByInputName
+    match subAccounts with
+        | [onlyChild] when (a.Postings = PersistentQueue.Empty)
+            -> let childTree = (constructAccountNameTree onlyChild)
+               {childTree with Name = a.LastName::childTree.Name}
+        | _ -> {Name = [a.LastName];
+                Children = [for subAccount in subAccounts -> (constructAccountNameTree subAccount)];
+                Postings =  (List.ofSeq a.Postings)}
 
 // Construct map where keys are the given dates and values are the "Accounts" at that date.
 let accountsByDate (input: InputFile) (dates: Date list) =
@@ -112,11 +110,13 @@ let accountsByDate (input: InputFile) (dates: Date list) =
         match dates with
         | [] -> soFar
         | date::dates ->
-            let accountsAtDate = (accounts.Book (List.filter (fun (t:Transaction) -> t.date <= date) transactions))
+            let transactionsToDate = (List.filter (fun (t:Transaction) -> t.date <= date) transactions)
+            let transactionsAfterDate = (List.filter (fun (t:Transaction) -> t.date > date) transactions)
+            let accountsAtDate = (accounts.Book transactionsToDate)
             let soFar = soFar.Add(date, accountsAtDate)
             (helper accountsAtDate
                     dates
-                    (List.filter (fun (t:Transaction) -> t.date > date) transactions)
+                    transactionsAfterDate
                     soFar)
     (helper (new Accounts()) (List.sort dates) (transactions input) PersistentDictionary.Empty)
 

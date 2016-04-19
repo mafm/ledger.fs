@@ -68,12 +68,12 @@ let pVerifyBalance =
           (pMandatorySpace >>. pAccount)
           (pMandatorySpace >>. pAmount .>> pOptionalSpace .>> newline)
         (fun date account amount -> BalanceVerfication { BalanceVerfication.date = date
-                                                         BalanceVerfication.account = account
+                                                         BalanceVerfication.account = (InputName account)
                                                          BalanceVerfication.amount = amount})
 let pPosting =
     pipe2 (pOptionalSpace >>. pAccount)
           (pMandatorySpace >>. pAmount .>> pOptionalSpace .>> newline)
-        (fun account amount -> { Posting.account = account;
+        (fun account amount -> { Posting.account = (InputName account);
                                  Posting.amount = amount})
 
 let pPostings =

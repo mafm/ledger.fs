@@ -12,15 +12,15 @@ open PersistentCollections
 
 type Balances = {
         // balances will have one entry for each element in the report's date list.
-        balances : Amount list}
+        Balances : Amount list}
 
-type Line = { account: AccountName
-              amounts: Balances
-              subAccounts: Line list
-              postings: PostingDetail list}
+type Line = { Account: InputNameAccount
+              Amounts: Balances
+              SubAccounts: Line list
+              Postings: PostingDetail list}
 
-type Report = {dates: Date list
-               lines: Line list}
+type Report = { Dates: Date list
+                Lines: Line list}
 
 type DatedAccounts = PersistentDictionary<Date, Accounts>
 
@@ -29,11 +29,11 @@ type DatedAccounts = PersistentDictionary<Date, Accounts>
 let extractBalance (a: Account option) =
     match a with
     | None -> zeroAmount
-    | Some a -> a.balance
+    | Some a -> a.Balance
 
 /// Can't I do this without a helper function?
 /// XXX: duplicate code.
-let extractSubAccount (a: Account option) (subAccountName: AccountNameComponents)=
+let extractSubAccount (a: Account option) (subAccountName: InternalNameAccount)=
     match a with
     | None -> None
     | Some a -> (a.find subAccountName)
@@ -53,59 +53,60 @@ let rec constructReportBalanceSheetLine (accounts : Account option List) (accoun
     let balances =
         (List.map (fun (a : Account option) ->
                         match a with
-                        | Some account -> account.balance
+                        | Some account -> account.Balance
                         | None -> zeroAmount)
                   accounts)
-    { account = (Text.fmt accountTree.name)
-      amounts =
-          { balances = balances }
-      subAccounts =
-          [ for child in accountTree.children ->
-                (constructReportBalanceSheetLine [ for a in accounts -> (extractSubAccount a child.name) ] child) ]
-      postings = accountTree.postings }
+    { Account = (toInputName accountTree.Name)
+      Amounts =
+          { Balances = balances }
+      SubAccounts =
+          [ for child in accountTree.Children ->
+                (constructReportBalanceSheetLine [ for a in accounts -> (extractSubAccount a child.Name) ] child) ]
+      Postings = accountTree.Postings }
 
-let addLine (name: AccountName) (accounts: DatedAccounts) (dates: Date list) linesSoFar =
+let addLine (name: InputNameAccount) (accounts: DatedAccounts) (dates: Date list) linesSoFar =
     let lastDate = (List.max dates)
     let finalAccounts = accounts.[lastDate] in
     match finalAccounts.find(name)  with
         | Some finalAccount -> ((constructReportBalanceSheetLine (List.map (fun date -> accounts.[date].find(name)) dates)
-                                                                   (constructAccountNameTree finalAccount finalAccount.name))
+                                                                 (constructAccountNameTree finalAccount))
                                 :: linesSoFar)
         | None -> linesSoFar
 
 let generateReport (input: InputFile) (dates: Date list)  =
     let datedAccounts = (accountsByDate input dates)
-    {dates = dates;
-     lines = (addLine "Assets" datedAccounts dates
-             (addLine "Liabilities" datedAccounts dates
-             (addLine "Equity" datedAccounts dates [])))}
+    { Dates = dates;
+      Lines = (addLine (InputName "Assets") datedAccounts dates
+              (addLine (InputName "Liabilities") datedAccounts dates
+              (addLine (InputName "Equity") datedAccounts dates [])))}
 
 let rec printReportLine indent (line : Line) =
-    for balance in line.amounts.balances do
+    for balance in line.Amounts.Balances do
         printf "%s\t" (Text.fmt balance)    
     for i in 1 .. indent do
         printf " "
-    printf "%s\n" line.account
-    for subLine in line.subAccounts do
+    match line.Account with
+        (InputName str) -> printf "%s\n" str
+    for subLine in line.SubAccounts do
         printReportLine (indent+2) subLine
 
 let printReport report =
     (* Balance/Change headings line *)
-    if (report.dates.Length > 0) then
+    if (report.Dates.Length > 0) then
         printf "Balance\t"
-        for i in 1 .. (report.dates.Length-1) do
+        for i in 1 .. (report.Dates.Length-1) do
             printf "\t"    
     (* date/"Account" headings line*)
-    for date in report.dates do
+    for date in report.Dates do
         printf "%s\t" (Text.fmtDate date)
-    match report.dates with
+    match report.Dates with
         | first::rest ->
             for date in rest do
                 printf "%s\t" date
         | _ -> ()
     printf "Account\n"
     (printf "%s%s-------\n"
-        (String.replicate report.dates.Length "----------\t")
-        (String.replicate (report.dates.Length-1) "----------\t"))
-    for line in report.lines do
+        (String.replicate report.Dates.Length "----------\t")
+        (String.replicate (report.Dates.Length-1) "----------\t"))
+    for line in report.Lines do
         printReportLine 0 line
