@@ -46,7 +46,7 @@ type Excel =
         match a with
         | AUD a ->
             cell.Value <- (0.01 * (float a))
-            cell.Style.Numberformat.Format <- "\"$\"#,##0.00;[Red]\"$\"#,##0.00"
+            cell.Style.Numberformat.Format <- "\"$\"#,##0.00;[Red]-\"$\"#,##0.00"
 
     static member write((report : ReportRegister.Report), (destination : Destination)) =
         match destination with
