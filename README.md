@@ -1,4 +1,4 @@
-# Ledger.fs: _Simple_ command-line double-entry accounting in F#.
+# Ledger.fs: _Simple_ command-line double-entry accounting (F#)
 
 **Ledger.fs** is a _simple_, command-line, double-entry accounting
 system. It reads transactions written in a simple format from a text
