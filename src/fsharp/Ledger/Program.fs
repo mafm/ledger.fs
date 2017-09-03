@@ -48,41 +48,37 @@ let parseInputFile filename =
         | ParseError message -> raise (UnableToParseFile(filename, message))
 
 let validateAccountNames (transactions: Transaction List) =
-    let mutable allOk = true
-    for t in transactions do
-        for p in t.postings do
-            if not (validAccountName p.account) then
-                (nonFatal (sprintf "Invalid account name '%s' in transaction dated %s (%s)."
-                                p.account.AsString t.date t.description))
-                allOk <- false
-    if not allOk then
-        (fatal "Error in input file - invalid account name(s).")
+    let invalidAccountErrors = 
+            transactions
+            |> List.collect (fun t -> 
+                  List.filter (fun (p:Posting) -> not (validAccountName p.account)) t.postings
+                  |> List.map (fun (p:Posting) -> (sprintf "Invalid account name '%s' in transaction dated %s (%s)." p.account.AsString t.date t.description)))
+    if invalidAccountErrors.Length <> 0 then
+        invalidAccountErrors
+        |> List.iter nonFatal
+        fatal "Error in input file - invalid account name(s)."
 
 let validateBalanceAssertions input =
-    let mutable allOk = true
     let assertions = (balanceVerifications input)
     let dates = (List.ofSeq (Seq.sort (Set.ofSeq [for a in assertions -> a.date])))
-    let accountsByDate = (accountsByDate input dates) in
-        for assertion in assertions do
-            if not (validAccountName assertion.account) then
-                (nonFatal (sprintf "Error in verify-balance dated %s - invalid account '%s'." assertion.date assertion.account.AsString))
-                allOk <- false
-            else
-                match accountsByDate.[assertion.date].find(assertion.account) with
-                | None ->
-                        (nonFatal (sprintf "Error in verify-balance. Account '%s' has no bookings at date %s."
-                                                    assertion.account.AsString assertion.date))
-                        allOk <- false
-                | Some account ->
-                       if account.Balance <> assertion.amount then
-                            (nonFatal (sprintf "Error in verify-balance. Expected balance of '%s' at %s: %s actual balance: %s"
-                                            assertion.account.AsString
-                                            assertion.date
-                                            (Text.fmt assertion.amount)
-                                            (Text.fmt account.Balance)))
-                            allOk <- false
-            if not allOk then
-                (fatal "Error in input file - incorrect verify-balance assertion(s).")
+    let accountsByDate = accountsByDate input dates
+    let errors = assertions
+                 |> List.choose (fun assertion -> 
+                           if not (validAccountName assertion.account) 
+                           then Some (sprintf "Error in verify-balance dated %s - invalid account '%s'." assertion.date assertion.account.AsString)
+                           else match accountsByDate.[assertion.date].find(assertion.account) with
+                                | None -> Some (sprintf "Error in verify-balance. Account '%s' has no bookings at date %s." assertion.account.AsString assertion.date)
+                                | Some account -> if account.Balance <> assertion.amount 
+                                                  then Some (sprintf "Error in verify-balance. Expected balance of '%s' at %s: %s actual balance: %s" 
+                                                                assertion.account.AsString 
+                                                                assertion.date 
+                                                                (Text.fmt assertion.amount) 
+                                                                (Text.fmt account.Balance))
+                                                  else None)
+    if errors.Length <> 0 then
+        errors
+        |> List.iter nonFatal
+        fatal "Error in input file - incorrect verify-balance assertion(s)."
 
 let validate (input: InputFile) =
     let transactions = (transactions input)
