@@ -104,7 +104,7 @@ let validate (input: InputFile) =
 let demo () =
     try
         let timer = new System.Diagnostics.Stopwatch()
-        let input = parseInputFile "c:/Users/mafm/Desktop/working-directories/ledger.fs/examples/sample.transactions" in do
+        let input = parseInputFile "..\..\..\..\..\Examples\sample.transactions" in do
             (validate input)
             printfn "Elapsed Time: %i ms.\n" timer.ElapsedMilliseconds
             let report = (ReportRegister.generateReport input (InputName "Expenses")) in do
