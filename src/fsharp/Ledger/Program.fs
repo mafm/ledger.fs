@@ -64,12 +64,12 @@ let validateBalanceAssertions input =
     let accountsByDate = accountsByDate input dates
     let errors = assertions
                  |> List.choose (fun assertion -> 
-                           if not (validAccountName assertion.account) 
-                           then Some (sprintf "Error in verify-balance dated %s - invalid account '%s'." assertion.date assertion.account.AsString)
-                           else match accountsByDate.[assertion.date].find(assertion.account) with
-                                | None -> Some (sprintf "Error in verify-balance. Account '%s' has no bookings at date %s." assertion.account.AsString assertion.date)
-                                | Some account -> if account.Balance <> assertion.amount 
-                                                  then Some (sprintf "Error in verify-balance. Expected balance of '%s' at %s: %s actual balance: %s" 
+                      if not (validAccountName assertion.account) 
+                      then Some (sprintf "Error in verify-balance dated %s - invalid account '%s'." assertion.date assertion.account.AsString)
+                      else match accountsByDate.[assertion.date].find(assertion.account) with
+                           | None -> Some (sprintf "Error in verify-balance. Account '%s' has no bookings at date %s." assertion.account.AsString assertion.date)
+                           | Some account -> if account.Balance <> assertion.amount 
+                                             then Some (sprintf "Error in verify-balance. Expected balance of '%s' at %s: %s actual balance: %s" 
                                                                 assertion.account.AsString 
                                                                 assertion.date 
                                                                 (Text.fmt assertion.amount) 
