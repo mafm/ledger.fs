@@ -53,7 +53,6 @@ type Excel =
             | None  -> ()
             | Some package ->
                 let worksheet = package.Workbook.Worksheets.Add("Running Balance - " + report.account.AsString)
-                let mutable rowCount = 2
                 worksheet.View.ShowGridLines <- true
                 (setHeader worksheet.Cells.[1, 1] "Date")
                 (setHeader worksheet.Cells.[1, 2] "Amount")
@@ -61,13 +60,15 @@ type Excel =
                 (setHeader worksheet.Cells.[1, 4] "Account")
                 (setHeader worksheet.Cells.[1, 5] "Description")
                 worksheet.View.FreezePanes(2,1)
-                for line in report.lines do
-                    Excel.setValue(worksheet.Cells.[rowCount, 1], line.date)
-                    Excel.setValue(worksheet.Cells.[rowCount, 2], line.amount)
-                    Excel.setValue(worksheet.Cells.[rowCount, 3], line.balance)
-                    Excel.setValue(worksheet.Cells.[rowCount, 4], line.account.AsString)
-                    Excel.setValue(worksheet.Cells.[rowCount, 5], line.description)
-                    rowCount <- rowCount + 1
+                report.lines
+                |> List.fold (fun rowCount line -> 
+                                  Excel.setValue(worksheet.Cells.[rowCount, 1], line.date)
+                                  Excel.setValue(worksheet.Cells.[rowCount, 2], line.amount)
+                                  Excel.setValue(worksheet.Cells.[rowCount, 3], line.balance)
+                                  Excel.setValue(worksheet.Cells.[rowCount, 4], line.account.AsString)
+                                  Excel.setValue(worksheet.Cells.[rowCount, 5], line.description)
+                                  rowCount+1) 2
+                |> ignore
                 for c in 1..5 do
                     worksheet.Column(c).AutoFit(0.0)
 
@@ -102,22 +103,24 @@ type Excel =
             setIndent ws nextRow (indent+1)
 
             let numDates = dates.Length
-            let mutable col = numDates
-            for date in dates do
-                if d.transaction.date <= date then
-                    Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
-                    ws.Cells.[nextRow, col].Style.Font.Italic <- true
-                col <- col - 1
 
-            col <- (2*numDates)
+            dates
+            |> List.fold (fun col date -> 
+                              if d.transaction.date <= date then
+                                 Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
+                                 ws.Cells.[nextRow, col].Style.Font.Italic <- true
+                              col-1) numDates
+            |> ignore
+
             match dates with
-            | first::rest -> let mutable prevDate = first
-                             for date in rest do
-                                if ((prevDate < d.transaction.date) && (d.transaction.date <= date)) then
-                                    Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
-                                    ws.Cells.[nextRow, col].Style.Font.Italic <- true
-                                col <- col - 1
-                                prevDate <- date
+            | first::rest ->
+                   rest
+                   |> List.fold (fun col date -> 
+                                     if ((first < d.transaction.date) && (d.transaction.date <= date)) then
+                                        Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
+                                        ws.Cells.[nextRow, col].Style.Font.Italic <- true
+                                     col-1) (2*numDates)
+                   |> ignore
             | [] -> ()
 
             Excel.setValue (ws.Cells.[nextRow, txnCol], (Text.fmtTxnId d.transaction.id))
@@ -138,23 +141,27 @@ type Excel =
                 writePostings rest (writePosting first nextRow)
 
         let numDates = dates.Length
-        let mutable column = numDates
-
         // Write as-at balances
         (setIndent ws nextRow indent)
-        for balance in line.Amounts.Balances do
-            (Excel.setValue (ws.Cells.[nextRow, column], balance))
-            column <- column - 1
+        line.Amounts.Balances
+        |> List.fold (fun col balance -> Excel.setValue (ws.Cells.[nextRow, col], balance)
+                                         col-1) numDates
+        |> ignore
 
         // Write differences between dates
-        column <- (numDates * 2)
-        for difference in line.Amounts.Differences do
-            (Excel.setValue (ws.Cells.[nextRow, column], difference))
-            column <- column - 1
+        line.Amounts.Differences
+        |> List.fold (fun col difference -> 
+                          Excel.setValue (ws.Cells.[nextRow, col], difference)
+                          col-1) (numDates*2)
+        |> ignore
 
-        column <- 2*(numDates+1)
+        line.Amounts.Differences
+        |> List.fold (fun col difference -> 
+                          Excel.setValue (ws.Cells.[nextRow, col], difference)
+                          col-1) (numDates*2)
+        |> ignore
 
-        Excel.setValue (ws.Cells.[nextRow, column+indent], line.Account.AsString)
+        Excel.setValue (ws.Cells.[nextRow, (2*(numDates+1))+indent], line.Account.AsString)
         let rowAfterChildren = Excel.writeLines (line.SubAccounts, dates, ws, indent+1, (nextRow+1), txnCol)
         let rowAfterPostings = (writePostings line.Postings rowAfterChildren)
         (collapse ws nextRow)
@@ -214,12 +221,12 @@ type Excel =
             setIndent ws nextRow (indent+1)
 
             let numDates = dates.Length
-            let mutable col = numDates
-            for date in dates do
-                if d.transaction.date <= date then
-                    Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
-                    ws.Cells.[nextRow, col].Style.Font.Italic <- true
-                col <- col - 1
+            dates
+            |> List.fold (fun col date -> if d.transaction.date <= date then
+                                             Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
+                                             ws.Cells.[nextRow, col].Style.Font.Italic <- true
+                                          col-1) numDates
+            |> ignore
 
             Excel.setValue (ws.Cells.[nextRow, txnCol], (Text.fmtTxnId d.transaction.id))
             Excel.setValue (ws.Cells.[nextRow, txnCol+1], (Text.fmtDate d.transaction.date))
@@ -239,20 +246,19 @@ type Excel =
                 writePostings rest (writePosting first nextRow)
 
         let numDates = dates.Length
-        let mutable column = numDates
 
         let rowAfterChildren = Excel.writeLines (line.SubAccounts, dates, ws, indent+1, nextRow, txnCol)
         let rowAfterPostings = (writePostings line.Postings rowAfterChildren)
 
         // Write as-at balances
         (setIndent ws rowAfterPostings indent)
-        for balance in line.Amounts.Balances do
-            (Excel.setValue (ws.Cells.[rowAfterPostings, column], balance))
-            column <- column - 1
+        line.Amounts.Balances
+        |> List.fold (fun column balance -> 
+                        Excel.setValue (ws.Cells.[rowAfterPostings, column], balance)
+                        column-1) numDates
+        |> ignore
 
-        column <- (numDates+2)
-
-        Excel.setValue (ws.Cells.[rowAfterPostings, column+indent], line.Account.AsString)
+        Excel.setValue (ws.Cells.[rowAfterPostings, (numDates+2)+indent], line.Account.AsString)
 
         (collapse ws rowAfterPostings)
         rowAfterPostings+1
@@ -305,20 +311,19 @@ type Excel =
             setIndent ws nextRow (indent+1)
 
             let numDates = dates.Length
-            let mutable col = numDates
-
-            let mutable prevDate = None
-            for date in dates do
-                if d.transaction.date <= date then
-                    let includeAtThisDate =
-                            match prevDate with
-                                    | None -> true
-                                    | Some prevDate -> (prevDate < d.transaction.date)
-                    if includeAtThisDate then
-                        Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
-                        ws.Cells.[nextRow, col].Style.Font.Italic <- true
-                prevDate <- Some date
-                col <- col - 1
+            
+            dates
+            |> List.fold (fun (prev,col) date ->                 
+                                 if d.transaction.date <= date then
+                                     let includeAtThisDate =
+                                             match prev with
+                                                     | None -> true
+                                                     | Some prevDate -> (prevDate < d.transaction.date)
+                                     if includeAtThisDate then
+                                         Excel.setValue (ws.Cells.[nextRow, col], d.posting.amount)
+                                         ws.Cells.[nextRow, col].Style.Font.Italic <- true
+                                 (Some date, col-1)) (None, numDates)
+            |> ignore
 
             Excel.setValue (ws.Cells.[nextRow, txnCol], (Text.fmtTxnId d.transaction.id))
             Excel.setValue (ws.Cells.[nextRow, txnCol+1], (Text.fmtDate d.transaction.date))
@@ -341,17 +346,16 @@ type Excel =
         let rowAfterPostings = (writePostings line.Postings rowAfterChildren)
 
         let numDates = dates.Length
-        let mutable column = numDates
 
         (setIndent ws rowAfterPostings indent)
         // Write differences to date
-        for difference in line.Amounts.Differences do
-            (Excel.setValue (ws.Cells.[rowAfterPostings, column], difference))
-            column <- column - 1
+        line.Amounts.Differences
+        |> List.fold (fun col difference -> 
+                            Excel.setValue (ws.Cells.[rowAfterPostings, col], difference)
+                            col-1) numDates
+        |> ignore
 
-        column <- (numDates+2)
-
-        Excel.setValue (ws.Cells.[rowAfterPostings, column+indent], line.Account.AsString)
+        Excel.setValue (ws.Cells.[rowAfterPostings, (numDates+2)+indent], line.Account.AsString)
 
 
         (collapse ws rowAfterPostings)
@@ -463,7 +467,6 @@ type Excel =
     static member writeLine((line: ReportTransactionList.Line),
                             (ws : ExcelWorksheet),
                             (nextRow: int)) =
-      let mutable nextRow = nextRow
 
       let txnCell = ws.Cells.[nextRow, 1]
       let dateCell = ws.Cells.[nextRow, 2]
@@ -481,13 +484,12 @@ type Excel =
       descCell.Style.Font.Italic <- true
       descCell.Style.Border.Top.Style <- OfficeOpenXml.Style.ExcelBorderStyle.Thin
 
-      nextRow <- nextRow+1
-
-      for p in line.transaction.postings do
-        Excel.setValue (ws.Cells.[nextRow, 2], p.amount)
-        Excel.setValue (ws.Cells.[nextRow, 3], p.account.AsString)
-        nextRow <- nextRow+1
-      nextRow
+      line.transaction.postings
+      |> List.fold (fun row p ->
+                        Excel.setValue (ws.Cells.[row, 2], p.amount)
+                        Excel.setValue (ws.Cells.[row, 3], p.account.AsString)
+                        row+1) (nextRow+1)
+      
 
     static member writeLines((lines : ReportTransactionList.Line list),
                              (ws : ExcelWorksheet),
@@ -500,24 +502,20 @@ type Excel =
         match destination with
             | None -> ()
             | Some package ->
-                let mutable nextRow = 1
                 let worksheet = package.Workbook.Worksheets.Add("Transactions")
 
                 match report.first with
-                | Some date -> (setHeader worksheet.Cells.[nextRow, 1] "From:")
-                               (setHeader worksheet.Cells.[nextRow, 2] date)
-                               nextRow <- nextRow+1
+                | Some date -> (setHeader worksheet.Cells.[1, 1] "From:")
+                               (setHeader worksheet.Cells.[1, 2] date)
                 | None -> ()
                 match report.last with
-                | Some date -> (setHeader worksheet.Cells.[nextRow, 1] "To:")
-                               (setHeader worksheet.Cells.[nextRow, 2] date)
-                               nextRow <- nextRow+1
+                | Some date -> (setHeader worksheet.Cells.[2, 1] "To:")
+                               (setHeader worksheet.Cells.[2, 2] date)
                 | None -> ()
-                (setHeader worksheet.Cells.[nextRow, 1] "Transaction#")
-                (setHeader worksheet.Cells.[nextRow, 2] "Date/Amount")
-                (setHeader worksheet.Cells.[nextRow, 3] "Description/Account")
-                nextRow <- nextRow + 1
-                worksheet.View.FreezePanes(nextRow, 1)
-                Excel.writeLines(report.lines, worksheet, nextRow) |> ignore
+                (setHeader worksheet.Cells.[3, 1] "Transaction#")
+                (setHeader worksheet.Cells.[3, 2] "Date/Amount")
+                (setHeader worksheet.Cells.[3, 3] "Description/Account")
+                worksheet.View.FreezePanes(4, 1)
+                Excel.writeLines(report.lines, worksheet, 4) |> ignore
                 for c in 1..3 do
                     worksheet.Column(c).AutoFit(0.0)
